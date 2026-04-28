@@ -1,0 +1,3 @@
+com\canteen\gateway\filter\JwtAuthGlobalFilter.class
+com\canteen\gateway\GatewayApplication.class
+com\canteen\gateway\filter\package-info.class

@@ -1,0 +1,5 @@
+com\canteen\user\mapper\package-info.class
+com\canteen\user\entity\package-info.class
+com\canteen\user\controller\package-info.class
+com\canteen\user\service\package-info.class
+com\canteen\user\UserServiceApplication.class

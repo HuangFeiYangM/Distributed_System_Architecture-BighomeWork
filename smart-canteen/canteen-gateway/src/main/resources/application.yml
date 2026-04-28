@@ -1,0 +1,51 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: canteen-gateway
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 127.0.0.1:8848
+      config:
+        server-addr: 127.0.0.1:8848
+        file-extension: yml
+    gateway:
+      discovery:
+        locator:
+          enabled: true  # 自动路由
+      routes:
+        - id: user-service
+          uri: lb://canteen-user-service
+          predicates:
+            - Path=/api/user/**
+          filters:
+            - StripPrefix=1
+        - id: menu-service
+          uri: lb://canteen-menu-service
+          predicates:
+            - Path=/api/menu/**
+          filters:
+            - StripPrefix=1
+        - id: order-service
+          uri: lb://canteen-order-service
+          predicates:
+            - Path=/api/order/**
+          filters:
+            - StripPrefix=1
+        - id: pickup-service
+          uri: lb://canteen-pickup-service
+          predicates:
+            - Path=/api/pickup/**
+          filters:
+            - StripPrefix=1
+
+  redis:
+    host: 127.0.0.1
+    port: 6379
+
+# JWT 配置（网关校验用）
+jwt:
+  secret: canteen-secret-key-2026-smart-canteen-jwt
+  expiration: 86400000  # 24小时

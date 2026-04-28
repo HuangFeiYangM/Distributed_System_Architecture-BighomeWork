@@ -1,0 +1,33 @@
+version: '3.8'
+services:
+  nacos:
+    image: nacos/nacos-server:v2.2.3
+    container_name: nacos
+    environment:
+      - MODE=standalone
+    ports:
+      - "8848:8848"
+      - "9848:9848"
+    restart: unless-stopped
+
+  mysql:
+    image: mysql:8.0
+    container_name: mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: canteen
+    ports:
+      - "3320:3306"   # ← 对外暴露 3320，映射到容器内 3306
+    volumes:
+      - mysql_data:/var/lib/mysql
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+
+volumes:
+  mysql_data:
