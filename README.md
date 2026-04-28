@@ -25,6 +25,7 @@
 | 语言 | Java | **17 (LTS)** |
 | 基础框架 | Spring Boot | 3.2.5 |
 | 微服务 | Spring Cloud | 2023.0.1 |
+| 服务调用 | Spring Cloud OpenFeign | 4.1.x |
 | 服务治理 | Spring Cloud Alibaba | 2023.0.1.0 |
 | 服务注册/配置 | Nacos | **2.2.3** |
 | API 网关 | Spring Cloud Gateway | 4.1.x |
@@ -101,27 +102,15 @@ docker compose -p k3s_mysql_nacos up -d
 
 | 组件 | 验证地址 | 预期结果 |
 |------|---------|---------|
-| Nacos | http://127.0.0.1:8848/nacos | 登录页（账号/密码：`nacos`/`nacos`） |
+| Nacos | http://127.0.0.1:8848/nacos | 控制台可访问（当前未开启鉴权） |
 | MySQL | `127.0.0.1:3320` | 可被 JDBC 连接 |
 | Redis | `127.0.0.1:6379` | 可被 Redis 客户端连接 |
 
 ### 3. 初始化业务数据库
 
-当前仓库代码默认采用 **单库方案**（所有服务连接同一个库 `canteen`）。
+当前仓库默认采用 **多库独立方案**（与 `database_init/init.sql` 一致）。
 
-连接 MySQL（端口 `3320`），执行以下建库语句：
-
-```sql
-CREATE DATABASE IF NOT EXISTS canteen 
-  DEFAULT CHARACTER SET utf8mb4 
-  DEFAULT COLLATE utf8mb4_unicode_ci;
-```
-
-> 当前项目未开启自动建表，请通过初始化 SQL 脚本手动维护表结构。
-
-### 3.1 可选：切换为微服务独立数据库（4 库）
-
-如果你希望按更标准的微服务方式演示，也可以改成 4 个独立数据库：
+连接 MySQL（端口 `3320`），执行以下建库语句（或直接执行 `database_init/init.sql`）：
 
 ```sql
 CREATE DATABASE IF NOT EXISTS canteen_user
@@ -141,12 +130,35 @@ CREATE DATABASE IF NOT EXISTS canteen_pickup
   DEFAULT COLLATE utf8mb4_unicode_ci;
 ```
 
-对应修改各服务 `application.yml`：
+各服务数据库连接对应关系：
 
 - `canteen-user-service` -> `jdbc:mysql://127.0.0.1:3320/canteen_user?...`
 - `canteen-menu-service` -> `jdbc:mysql://127.0.0.1:3320/canteen_menu?...`
 - `canteen-order-service` -> `jdbc:mysql://127.0.0.1:3320/canteen_order?...`
 - `canteen-pickup-service` -> `jdbc:mysql://127.0.0.1:3320/canteen_pickup?...`
+
+> 当前项目未开启自动建表，请通过初始化 SQL 脚本手动维护表结构。
+
+### 3.2 导入 Nacos 配置中心模板
+
+当前项目已启用 Nacos Config（`spring.config.import`），默认从 `DEFAULT_GROUP` 加载以下 DataId：
+
+- `canteen-gateway.yml`
+- `canteen-user-service.yml`
+- `canteen-menu-service.yml`
+- `canteen-order-service.yml`
+- `canteen-pickup-service.yml`
+
+模板文件已放在项目根目录 `nacos/`。
+
+在 Nacos 控制台（配置管理 -> 配置列表）中手动新增配置：
+
+- `DataId`：与文件名一致（如 `canteen-user-service.yml`）
+- `Group`：`DEFAULT_GROUP`
+- `配置格式`：`YAML`
+- `配置内容`：复制对应 `nacos/*.yml` 文件内容
+
+> 当前环境的 Nacos 暂未开启鉴权，不需要用户名密码；如后续开启鉴权，再补充 `spring.cloud.nacos.username/password`。
 
 ### 4. 编译项目
 
@@ -282,27 +294,53 @@ docker compose down -v
 
 ## 🔧 开发配置速查
 
-### 数据库连接（各服务 application.yml 通用）
+### 数据库连接（按服务区分）
 
 ```yaml
+# canteen-user-service
 spring:
   datasource:
-    url: jdbc:mysql://127.0.0.1:3320/canteen?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
+    url: jdbc:mysql://127.0.0.1:3320/canteen_user?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
     username: root
     password: root
     driver-class-name: com.mysql.cj.jdbc.Driver
 ```
 
-> 说明：上面是当前仓库默认的单库配置；如果切换为多库方案，请把不同服务改成各自数据库名（`canteen_user/menu/order/pickup`）。
+```yaml
+# canteen-menu-service
+spring:
+  datasource:
+    url: jdbc:mysql://127.0.0.1:3320/canteen_menu?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
+```
+
+```yaml
+# canteen-order-service
+spring:
+  datasource:
+    url: jdbc:mysql://127.0.0.1:3320/canteen_order?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
+```
+
+```yaml
+# canteen-pickup-service
+spring:
+  datasource:
+    url: jdbc:mysql://127.0.0.1:3320/canteen_pickup?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
+```
 
 ### Nacos 注册中心
 
 ```yaml
 spring:
+  config:
+    import: optional:nacos:${spring.application.name}.yml?group=DEFAULT_GROUP&refreshEnabled=true
   cloud:
     nacos:
       discovery:
         server-addr: 127.0.0.1:8848
+      config:
+        server-addr: 127.0.0.1:8848
+        file-extension: yml
+        group: DEFAULT_GROUP
 ```
 
 ### Redis

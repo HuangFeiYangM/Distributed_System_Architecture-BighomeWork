@@ -1,5 +1,13 @@
-com\canteen\user\mapper\package-info.class
-com\canteen\user\entity\package-info.class
-com\canteen\user\controller\package-info.class
-com\canteen\user\service\package-info.class
+com\canteen\user\config\GlobalExceptionHandler.class
+com\canteen\user\dto\LoginDTO.class
+com\canteen\user\dto\RegisterDTO.class
+com\canteen\user\config\MybatisMetaObjectHandler.class
+com\canteen\user\entity\User.class
+com\canteen\user\config\MybatisPlusConfig.class
+com\canteen\user\service\UserService.class
+com\canteen\user\vo\UserVO.class
+com\canteen\user\vo\UserVO$UserVOBuilder.class
+com\canteen\user\mapper\UserMapper.class
+com\canteen\user\dto\UserUpdateDTO.class
 com\canteen\user\UserServiceApplication.class
+com\canteen\user\controller\UserController.class

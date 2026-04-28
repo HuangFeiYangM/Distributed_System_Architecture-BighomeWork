@@ -1,2 +1,7 @@
-com\canteen\common\api\package-info.class
-com\canteen\common\package-info.class
+com\canteen\common\exception\BusinessException.class
+com\canteen\common\util\JwtUtil.class
+com\canteen\common\constant\RoleNames.class
+com\canteen\common\constant\UserHeaders.class
+com\canteen\common\entity\BaseEntity.class
+com\canteen\common\result\Result.class
+com\canteen\common\result\StatusCode.class

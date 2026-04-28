@@ -1,0 +1,58 @@
+server:
+  port: 8080
+
+spring:
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOriginPatterns: "*"
+            allowedMethods: "*"
+            allowedHeaders: "*"
+            allowCredentials: true
+      routes:
+        - id: user-service
+          uri: lb://canteen-user-service
+          predicates:
+            - Path=/api/user/**
+          filters:
+            - StripPrefix=1
+        - id: menu-service
+          uri: lb://canteen-menu-service
+          predicates:
+            - Path=/api/menu/**
+          filters:
+            - StripPrefix=1
+        - id: order-service
+          uri: lb://canteen-order-service
+          predicates:
+            - Path=/api/order/**
+          filters:
+            - StripPrefix=1
+        - id: pickup-service
+          uri: lb://canteen-pickup-service
+          predicates:
+            - Path=/api/pickup/**
+          filters:
+            - StripPrefix=1
+        - id: pickup-websocket
+          uri: lb:ws://canteen-pickup-service
+          predicates:
+            - Path=/ws/pickup/**
+  redis:
+    host: 127.0.0.1
+    port: 6379
+
+jwt:
+  secret: canteen-secret-key-2026-smart-canteen-jwt
+  expiration: 86400000
+
+rate-limit:
+  ip-limit: 100
+  user-limit: 30
+  bucket-size: 10000
+  window-buckets: 6

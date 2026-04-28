@@ -1,0 +1,27 @@
+# ===== Build outputs =====
+**/target/
+out/
+**/build/
+
+# ===== Logs =====
+*.log
+logs/
+
+# ===== IntelliJ IDEA =====
+.idea/workspace.xml
+.idea/shelf/
+.idea/httpRequests/
+*.iml
+
+# ===== VS Code =====
+.vscode/
+
+# ===== OS / temporary =====
+.DS_Store
+Thumbs.db
+desktop.ini
+*.tmp
+*.swp
+
+# ===== Archives / local packages =====
+*.zip

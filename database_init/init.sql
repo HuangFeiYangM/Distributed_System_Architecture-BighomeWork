@@ -143,6 +143,7 @@ CREATE TABLE canteen_window (
     location        VARCHAR(255) COMMENT '物理位置描述',
     merchant_id     BIGINT UNSIGNED COMMENT '负责商家用户ID',
     status          TINYINT DEFAULT 1 COMMENT '状态：0-关闭，1-营业',
+    pickup_prefix   VARCHAR(8) DEFAULT 'A' COMMENT '取餐号前缀，与单库 init_canteen_single.sql 一致',
     create_time     DATETIME DEFAULT CURRENT_TIMESTAMP,
     update_time     DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     deleted         TINYINT DEFAULT 0 COMMENT '逻辑删除',

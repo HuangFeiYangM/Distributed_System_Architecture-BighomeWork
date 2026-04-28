@@ -2,6 +2,8 @@ server:
   port: 8080
 
 spring:
+  config:
+    import: optional:nacos:${spring.application.name}.yml?group=DEFAULT_GROUP&refreshEnabled=true
   application:
     name: canteen-gateway
   cloud:
@@ -11,10 +13,18 @@ spring:
       config:
         server-addr: 127.0.0.1:8848
         file-extension: yml
+        group: DEFAULT_GROUP
     gateway:
       discovery:
         locator:
-          enabled: true  # 自动路由
+          enabled: true
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOriginPatterns: "*"
+            allowedMethods: "*"
+            allowedHeaders: "*"
+            allowCredentials: true
       routes:
         - id: user-service
           uri: lb://canteen-user-service
@@ -40,12 +50,21 @@ spring:
             - Path=/api/pickup/**
           filters:
             - StripPrefix=1
+        - id: pickup-websocket
+          uri: lb:ws://canteen-pickup-service
+          predicates:
+            - Path=/ws/pickup/**
 
   redis:
     host: 127.0.0.1
     port: 6379
 
-# JWT 配置（网关校验用）
 jwt:
   secret: canteen-secret-key-2026-smart-canteen-jwt
-  expiration: 86400000  # 24小时
+  expiration: 86400000
+
+rate-limit:
+  ip-limit: 100
+  user-limit: 30
+  bucket-size: 10000
+  window-buckets: 6
