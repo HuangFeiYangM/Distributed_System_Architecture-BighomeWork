@@ -7,8 +7,8 @@ const router = useRouter();
 const authStore = useAuthStore();
 const loading = ref(false);
 const form = reactive({
-    phone: "13800000002",
-    password: "user123"
+    phone: "",
+    password: ""
 });
 const onLogin = async () => {
     if (!form.phone || !form.password) {
