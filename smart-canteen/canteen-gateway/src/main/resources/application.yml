@@ -32,6 +32,12 @@ spring:
             - Path=/api/user/**
           filters:
             - StripPrefix=1
+        - id: dish-service
+          uri: lb://canteen-menu-service
+          predicates:
+            - Path=/api/dish/**
+          filters:
+            - StripPrefix=1
         - id: menu-service
           uri: lb://canteen-menu-service
           predicates:

@@ -36,12 +36,12 @@ public class MenuBoardController {
     }
 
     @GetMapping("/{id}")
-    public Result<MenuDetailVO> detail(@PathVariable Long id) {
+    public Result<MenuDetailVO> detail(@PathVariable("id") Long id) {
         return Result.success(dailyMenuService.detail(id));
     }
 
     @GetMapping("/dish/{menuDishId}")
-    public Result<MenuDishDetailVO> menuDish(@PathVariable Long menuDishId) {
+    public Result<MenuDishDetailVO> menuDish(@PathVariable("menuDishId") Long menuDishId) {
         return Result.success(dailyMenuService.menuDishDetail(menuDishId));
     }
 

@@ -58,8 +58,8 @@ public class UserController {
     @GetMapping("/list")
     public Result<Page<UserVO>> list(
             HttpServletRequest request,
-            @RequestParam(defaultValue = "1") long page,
-            @RequestParam(defaultValue = "10") long size) {
+            @RequestParam(value = "page", defaultValue = "1") long page,
+            @RequestParam(value = "size", defaultValue = "10") long size) {
         return Result.success(userService.list(request, page, size));
     }
 }

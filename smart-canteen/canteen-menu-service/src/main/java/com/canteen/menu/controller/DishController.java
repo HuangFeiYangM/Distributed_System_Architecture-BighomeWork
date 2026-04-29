@@ -31,32 +31,35 @@ public class DishController {
     }
 
     @PutMapping("/{id}")
-    public Result<Void> update(HttpServletRequest request, @PathVariable Long id, @Valid @RequestBody DishCreateDTO dto) {
+    public Result<Void> update(HttpServletRequest request, @PathVariable("id") Long id, @Valid @RequestBody DishCreateDTO dto) {
         dishService.update(request, id, dto);
         return Result.success();
     }
 
     @DeleteMapping("/{id}")
-    public Result<Void> delete(HttpServletRequest request, @PathVariable Long id) {
+    public Result<Void> delete(HttpServletRequest request, @PathVariable("id") Long id) {
         dishService.delete(request, id);
         return Result.success();
     }
 
     @GetMapping("/{id}")
-    public Result<Dish> get(@PathVariable Long id) {
+    public Result<Dish> get(@PathVariable("id") Long id) {
         return Result.success(dishService.getById(id));
     }
 
     @GetMapping("/list")
     public Result<Page<Dish>> list(
-            @RequestParam(defaultValue = "1") long page,
-            @RequestParam(defaultValue = "10") long size,
-            @RequestParam(required = false) Long merchantId) {
+            @RequestParam(value = "page", defaultValue = "1") long page,
+            @RequestParam(value = "size", defaultValue = "10") long size,
+            @RequestParam(value = "merchantId", required = false) Long merchantId) {
         return Result.success(dishService.page(page, size, merchantId));
     }
 
     @PutMapping("/{id}/status")
-    public Result<Void> status(HttpServletRequest request, @PathVariable Long id, @RequestParam Integer value) {
+    public Result<Void> status(
+            HttpServletRequest request,
+            @PathVariable("id") Long id,
+            @RequestParam(value = "value") Integer value) {
         dishService.updateStatus(request, id, value);
         return Result.success();
     }

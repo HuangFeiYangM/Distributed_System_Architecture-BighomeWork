@@ -126,6 +126,7 @@ CREATE TABLE order_item (
     unit_price      DECIMAL(10,2) NOT NULL COMMENT '下单时单价',
     subtotal        DECIMAL(10,2) NOT NULL COMMENT '小计金额',
     create_time     DATETIME DEFAULT CURRENT_TIMESTAMP,
+    update_time     DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     deleted         TINYINT DEFAULT 0 COMMENT '逻辑删除',
     INDEX idx_order (order_id),
     INDEX idx_dish (dish_id)
@@ -169,3 +170,44 @@ CREATE TABLE pickup_record (
     INDEX idx_queue_status (queue_status),
     INDEX idx_pickup_no (pickup_no)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='取餐排队记录表';
+
+-- ============================================
+-- 6. 兼容性补丁（可重复执行）
+--    说明：用于“脚本已跑过/表已存在但字段缺失”的场景，
+--    例如旧版本缺少 canteen_window.pickup_prefix，导致插入失败。
+-- ============================================
+
+-- 6.1 canteen_pickup.canteen_window：补齐 pickup_prefix 列（如缺失）
+SET @col_exists := (
+    SELECT COUNT(1)
+    FROM information_schema.COLUMNS
+    WHERE TABLE_SCHEMA = 'canteen_pickup'
+      AND TABLE_NAME = 'canteen_window'
+      AND COLUMN_NAME = 'pickup_prefix'
+);
+SET @ddl := IF(
+    @col_exists = 0,
+    'ALTER TABLE canteen_pickup.canteen_window ADD COLUMN pickup_prefix VARCHAR(8) DEFAULT ''A'' COMMENT ''取餐号前缀'' AFTER status',
+    'SELECT ''OK: canteen_window.pickup_prefix exists'' AS _'
+);
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+-- 6.2 canteen_menu.menu_dish：补齐唯一约束 uk_menu_dish(menu_id, dish_id)（如缺失）
+SET @uk_exists := (
+    SELECT COUNT(1)
+    FROM information_schema.TABLE_CONSTRAINTS
+    WHERE CONSTRAINT_SCHEMA = 'canteen_menu'
+      AND TABLE_NAME = 'menu_dish'
+      AND CONSTRAINT_NAME = 'uk_menu_dish'
+      AND CONSTRAINT_TYPE = 'UNIQUE'
+);
+SET @ddl := IF(
+    @uk_exists = 0,
+    'ALTER TABLE canteen_menu.menu_dish ADD CONSTRAINT uk_menu_dish UNIQUE (menu_id, dish_id)',
+    'SELECT ''OK: menu_dish.uk_menu_dish exists'' AS _'
+);
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;

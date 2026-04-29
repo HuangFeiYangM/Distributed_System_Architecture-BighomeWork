@@ -33,7 +33,7 @@ public class PickupController {
     }
 
     @PostMapping("/{windowId}/call")
-    public Result<String> call(@PathVariable Long windowId) {
+    public Result<String> call(@PathVariable("windowId") Long windowId) {
         return Result.success(pickupQueueService.call(windowId));
     }
 
@@ -44,12 +44,12 @@ public class PickupController {
     }
 
     @GetMapping("/{windowId}/queue")
-    public Result<List<String>> queue(@PathVariable Long windowId) {
+    public Result<List<String>> queue(@PathVariable("windowId") Long windowId) {
         return Result.success(pickupQueueService.queue(windowId));
     }
 
     @GetMapping("/{windowId}/display")
-    public Result<DisplayVO> display(@PathVariable Long windowId) {
+    public Result<DisplayVO> display(@PathVariable("windowId") Long windowId) {
         return Result.success(pickupQueueService.display(windowId));
     }
 

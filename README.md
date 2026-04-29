@@ -33,6 +33,13 @@
 | 数据库 | MySQL | 8.0 |
 | 缓存/队列 | Redis | 7.x |
 | 鉴权 | JJWT | 0.12.5 |
+| 前端框架 | Vue | 3.5.x |
+| 前端构建 | Vite | 5.4.x |
+| 前端语言 | TypeScript | 5.8.x |
+| 前端路由 | Vue Router | 4.5.x |
+| 前端状态管理 | Pinia | 2.3.x |
+| 前端 UI 组件 | Element Plus | 2.9.x |
+| 前端 HTTP 客户端 | Axios | 1.9.x |
 | 容器编排 | K3S (k3d) | v1.31.5-k3s1 |
 | 构建工具 | Maven | 3.9.x |
 | 操作系统 | Windows 11 | — |
@@ -179,6 +186,25 @@ mvn -DskipTests package
 
 验证：进入 Nacos 控制台 → 服务管理 → 服务列表，应能看到 5 个服务全部注册成功。
 
+### 6. 启动前端（smart-canteen-web）
+
+项目根目录已新增前端工程：`smart-canteen-web`（Vue 3 + Vite + TypeScript）。
+
+```powershell
+# 在项目根目录执行
+cd smart-canteen-web
+npm install
+npm run dev
+```
+
+默认访问地址：`http://127.0.0.1:5173`
+
+联调说明：
+
+- 前端请求统一走 `/api/*`，由 Vite 代理到 `http://127.0.0.1:8080`。
+- WebSocket 连接统一走 `/ws/*`，由 Vite 代理到 Gateway（`ws://127.0.0.1:8080`）。
+- 后端返回采用统一响应体，前端需按 `code == 200` 判断业务成功（不能只看 HTTP 状态码）。
+
 ---
 
 ## 📁 项目结构
@@ -187,6 +213,24 @@ mvn -DskipTests package
 Distributed_System_Architecture/
 ├── docker-compose.yml
 ├── README.md
+├── smart-canteen-web/
+│   ├── package.json
+│   ├── vite.config.ts
+│   ├── tsconfig.json
+│   └── src/
+│       ├── main.ts
+│       ├── App.vue
+│       ├── api/
+│       │   └── user.ts
+│       ├── router/
+│       │   └── index.ts
+│       ├── stores/
+│       │   └── auth.ts
+│       ├── utils/
+│       │   └── request.ts
+│       └── views/
+│           ├── LoginView.vue
+│           └── HomeView.vue
 └── smart-canteen/
     ├── pom.xml
     ├── canteen-common/
@@ -231,6 +275,19 @@ Distributed_System_Architecture/
             ├── main/java/com/canteen/pickup/PickupServiceApplication.java
             ├── main/resources/application.yml
             └── test/java/
+```
+
+### 前端目录建议（后续扩展）
+
+```text
+smart-canteen-web/src/
+├── api/            # 按模块拆分接口（user/menu/order/pickup/dish）
+├── components/     # 可复用组件
+├── router/         # 路由与鉴权守卫
+├── stores/         # Pinia 状态管理
+├── utils/          # request、token、ws 封装
+├── views/          # 页面级组件
+└── types/          # TypeScript 类型定义
 ```
 
 ---
