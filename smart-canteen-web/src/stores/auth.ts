@@ -31,6 +31,10 @@ export const useAuthStore = defineStore("auth", {
       localStorage.setItem(USER_ID_KEY, String(data.userId));
       localStorage.setItem(ROLE_KEY, String(data.role));
     },
+    setToken(token: string) {
+      this.token = token;
+      localStorage.setItem(TOKEN_KEY, token);
+    },
     logout() {
       this.token = "";
       this.userId = null;

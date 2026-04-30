@@ -10,6 +10,7 @@
       <el-space wrap>
         <el-button :loading="loading" @click="loadAll">刷新数据</el-button>
         <el-button type="primary" plain @click="goDisplay">取餐大屏</el-button>
+        <el-button type="primary" plain @click="goProfile">个人中心</el-button>
         <span>当前角色：{{ roleLabel }}</span>
       </el-space>
     </el-card>
@@ -72,6 +73,11 @@
         <el-table-column prop="pickupCode" label="取餐码" width="110" />
         <el-table-column prop="pickupNo" label="叫号码" width="90" />
         <el-table-column prop="createTime" label="创建时间" min-width="170" />
+        <el-table-column label="操作" width="100">
+          <template #default="{ row }">
+            <el-button link type="primary" @click="showOrderDetail(row.id)">详情</el-button>
+          </template>
+        </el-table-column>
       </el-table>
     </el-card>
 
@@ -209,6 +215,19 @@
             <el-divider />
             <el-input v-model="verifyCode" placeholder="输入取餐码，例如 408765" />
             <el-button class="verify-btn" type="success" @click="verifyPickup">核销取餐</el-button>
+
+            <el-divider />
+            <div class="section-sub-title">按取餐码查询订单</div>
+            <el-input v-model="searchPickupCode" placeholder="输入取餐码进行查询" />
+            <el-button class="verify-btn" type="primary" plain @click="searchOrderByCode">查询订单</el-button>
+            <el-descriptions v-if="searchedOrder" :column="1" border class="search-result">
+              <el-descriptions-item label="订单ID">{{ searchedOrder.id }}</el-descriptions-item>
+              <el-descriptions-item label="用户ID">{{ searchedOrder.userId }}</el-descriptions-item>
+              <el-descriptions-item label="窗口ID">{{ searchedOrder.windowId }}</el-descriptions-item>
+              <el-descriptions-item label="状态">{{ statusText(searchedOrder.status) }}</el-descriptions-item>
+              <el-descriptions-item label="取餐码">{{ searchedOrder.pickupCode }}</el-descriptions-item>
+              <el-descriptions-item label="叫号码">{{ searchedOrder.pickupNo || "-" }}</el-descriptions-item>
+            </el-descriptions>
           </el-card>
         </el-col>
       </el-row>
@@ -276,6 +295,26 @@
         </el-col>
       </el-row>
     </template>
+
+    <el-dialog v-model="detailVisible" title="订单详情" width="720px">
+      <el-descriptions v-if="detailOrder" :column="2" border>
+        <el-descriptions-item label="订单ID">{{ detailOrder.id }}</el-descriptions-item>
+        <el-descriptions-item label="订单号">{{ detailOrder.orderNo }}</el-descriptions-item>
+        <el-descriptions-item label="窗口ID">{{ detailOrder.windowId }}</el-descriptions-item>
+        <el-descriptions-item label="状态">{{ statusText(detailOrder.status) }}</el-descriptions-item>
+        <el-descriptions-item label="取餐码">{{ detailOrder.pickupCode }}</el-descriptions-item>
+        <el-descriptions-item label="叫号码">{{ detailOrder.pickupNo || "-" }}</el-descriptions-item>
+        <el-descriptions-item label="金额">¥{{ detailOrder.totalAmount }}</el-descriptions-item>
+        <el-descriptions-item label="备注">{{ detailOrder.remark || "-" }}</el-descriptions-item>
+      </el-descriptions>
+      <el-divider />
+      <el-table :data="detailOrder?.items || []" size="small">
+        <el-table-column prop="dishName" label="菜品" min-width="130" />
+        <el-table-column prop="quantity" label="数量" width="80" />
+        <el-table-column prop="unitPrice" label="单价" width="90" />
+        <el-table-column prop="subtotal" label="小计" width="100" />
+      </el-table>
+    </el-dialog>
   </div>
 </template>
 
@@ -284,7 +323,15 @@ import { computed, onMounted, reactive, ref } from "vue";
 import { ElMessage } from "element-plus";
 import { useRouter } from "vue-router";
 import { getTodayMenusApi, publishMenuApi, type MenuDish } from "../api/menu";
-import { getMyOrdersApi, createOrderApi, updateOrderStatusApi, type OrderRecord } from "../api/order";
+import {
+  getMyOrdersApi,
+  createOrderApi,
+  updateOrderStatusApi,
+  getOrderDetailApi,
+  getOrderByPickupCodeApi,
+  type OrderBrief,
+  type OrderRecord
+} from "../api/order";
 import {
   getWindowsApi,
   getWindowQueueApi,
@@ -313,6 +360,10 @@ const remark = ref("");
 const quantityMap = reactive<Record<number, number>>({});
 const queueList = ref<string[]>([]);
 const verifyCode = ref("");
+const searchPickupCode = ref("");
+const searchedOrder = ref<OrderBrief | null>(null);
+const detailVisible = ref(false);
+const detailOrder = ref<OrderRecord | null>(null);
 const creatingWindow = ref(false);
 const creatingDish = ref(false);
 const publishingMenu = ref(false);
@@ -473,6 +524,20 @@ const verifyPickup = async () => {
   await loadAll();
 };
 
+const searchOrderByCode = async () => {
+  if (!searchPickupCode.value.trim()) {
+    ElMessage.warning("请输入取餐码");
+    return;
+  }
+  searchedOrder.value = await getOrderByPickupCodeApi(searchPickupCode.value.trim());
+  ElMessage.success("查询成功");
+};
+
+const showOrderDetail = async (orderId: number) => {
+  detailOrder.value = await getOrderDetailApi(orderId);
+  detailVisible.value = true;
+};
+
 const createWindow = async () => {
   if (!windowForm.name.trim()) {
     ElMessage.warning("请输入窗口名称");
@@ -604,6 +669,10 @@ const goDisplay = async () => {
   await router.push("/display");
 };
 
+const goProfile = async () => {
+  await router.push("/profile");
+};
+
 onMounted(() => {
   const now = new Date();
   const hour = String(now.getHours()).padStart(2, "0");
@@ -652,6 +721,15 @@ onMounted(() => {
 }
 
 .publish-btn {
+  margin-top: 10px;
+}
+
+.section-sub-title {
+  margin-bottom: 8px;
+  color: #606266;
+}
+
+.search-result {
   margin-top: 10px;
 }
 </style>
