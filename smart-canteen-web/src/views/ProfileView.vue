@@ -17,16 +17,12 @@
         <el-descriptions-item label="学号">{{ profile.studentNo }}</el-descriptions-item>
         <el-descriptions-item label="角色">{{ roleLabel(profile.role) }}</el-descriptions-item>
         <el-descriptions-item label="状态">{{ profile.status === 1 ? "启用" : "停用" }}</el-descriptions-item>
-        <el-descriptions-item label="头像地址">{{ profile.avatar || "-" }}</el-descriptions-item>
       </el-descriptions>
 
       <el-divider />
       <el-form label-width="90px">
         <el-form-item label="昵称">
           <el-input v-model="form.nickname" placeholder="请输入昵称" />
-        </el-form-item>
-        <el-form-item label="头像URL">
-          <el-input v-model="form.avatar" placeholder="https://example.com/avatar.png" />
         </el-form-item>
         <el-form-item>
           <el-button type="primary" :loading="saving" @click="save">保存资料</el-button>
@@ -50,8 +46,7 @@ const profile = ref<UserProfile | null>(null);
 const saving = ref(false);
 const refreshing = ref(false);
 const form = reactive({
-  nickname: "",
-  avatar: ""
+  nickname: ""
 });
 
 const roleLabel = (role: number) => {
@@ -64,15 +59,13 @@ const loadProfile = async () => {
   const data = await meApi();
   profile.value = data;
   form.nickname = data.nickname || "";
-  form.avatar = data.avatar || "";
 };
 
 const save = async () => {
   saving.value = true;
   try {
     await updateMeApi({
-      nickname: form.nickname.trim() || undefined,
-      avatar: form.avatar.trim() || undefined
+      nickname: form.nickname.trim() || undefined
     });
     ElMessage.success("资料已更新");
     await loadProfile();
@@ -107,12 +100,45 @@ onMounted(() => {
 
 <style scoped>
 .wrap {
-  padding: 24px;
+  padding: 26px 20px;
+  max-width: 1080px;
+  margin: 0 auto;
 }
 
 .head {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 10px;
+}
+
+.head span {
+  font-size: 22px;
+  font-weight: 700;
+  color: #1d3b8b;
+}
+
+:deep(.el-descriptions) {
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+:deep(.el-descriptions__label) {
+  color: #475569;
+  width: 120px;
+}
+
+:deep(.el-form) {
+  max-width: 620px;
+}
+
+@media (max-width: 768px) {
+  .wrap {
+    padding: 16px 12px 20px;
+  }
+
+  .head {
+    flex-wrap: wrap;
+  }
 }
 </style>

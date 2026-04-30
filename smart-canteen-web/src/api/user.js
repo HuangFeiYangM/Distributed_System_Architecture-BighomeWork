@@ -3,13 +3,16 @@ export async function loginApi(payload) {
     const resp = await request.post("/user/login", payload);
     return resp.data.data;
 }
+export async function registerApi(payload) {
+    await request.post("/user/register", payload);
+}
 export async function meApi() {
     const resp = await request.get("/user/me");
     return resp.data.data;
 }
 export async function getUserListApi(page = 1, size = 100) {
     const resp = await request.get(`/user/list?page=${page}&size=${size}`);
-    return resp.data.data?.records || [];
+    return resp.data.data || { records: [], total: 0, current: page, size };
 }
 export async function updateMeApi(payload) {
     await request.put("/user/me", payload);

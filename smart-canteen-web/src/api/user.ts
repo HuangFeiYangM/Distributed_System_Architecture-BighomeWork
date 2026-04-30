@@ -6,12 +6,26 @@ export interface LoginPayload {
   password: string;
 }
 
+export interface RegisterPayload {
+  phone: string;
+  password: string;
+  nickname: string;
+  studentNo: string;
+}
+
 export interface UserRecord {
   id: number;
   phone: string;
   nickname: string;
   role: number;
   status: number;
+}
+
+export interface UserPageData {
+  records: UserRecord[];
+  total: number;
+  current: number;
+  size: number;
 }
 
 export interface UserProfile {
@@ -34,16 +48,20 @@ export async function loginApi(payload: LoginPayload) {
   return resp.data.data;
 }
 
+export async function registerApi(payload: RegisterPayload) {
+  await request.post("/user/register", payload);
+}
+
 export async function meApi() {
   const resp = await request.get<{ code: number; msg: string; data: UserProfile }>("/user/me");
   return resp.data.data;
 }
 
 export async function getUserListApi(page = 1, size = 100) {
-  const resp = await request.get<{ code: number; msg: string; data: { records: UserRecord[] } }>(
+  const resp = await request.get<{ code: number; msg: string; data: UserPageData }>(
     `/user/list?page=${page}&size=${size}`
   );
-  return resp.data.data?.records || [];
+  return resp.data.data || { records: [], total: 0, current: page, size };
 }
 
 export async function updateMeApi(payload: UserUpdatePayload) {

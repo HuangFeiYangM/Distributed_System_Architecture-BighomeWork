@@ -41,3 +41,8 @@ export async function deleteDishApi(id: number) {
 export async function updateDishStatusApi(id: number, value: 0 | 1) {
   await request.put(`/dish/${id}/status?value=${value}`);
 }
+
+export async function getDishDetailApi(id: number) {
+  const resp = await request.get<{ code: number; msg: string; data: Dish }>(`/dish/${id}`);
+  return resp.data.data;
+}

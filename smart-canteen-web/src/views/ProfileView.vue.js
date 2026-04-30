@@ -9,8 +9,7 @@ const profile = ref(null);
 const saving = ref(false);
 const refreshing = ref(false);
 const form = reactive({
-    nickname: "",
-    avatar: ""
+    nickname: ""
 });
 const roleLabel = (role) => {
     if (role === 2)
@@ -23,14 +22,12 @@ const loadProfile = async () => {
     const data = await meApi();
     profile.value = data;
     form.nickname = data.nickname || "";
-    form.avatar = data.avatar || "";
 };
 const save = async () => {
     saving.value = true;
     try {
         await updateMeApi({
-            nickname: form.nickname.trim() || undefined,
-            avatar: form.avatar.trim() || undefined
+            nickname: form.nickname.trim() || undefined
         });
         ElMessage.success("资料已更新");
         await loadProfile();
@@ -65,6 +62,9 @@ debugger; /* PartiallyEnd: #3632/scriptSetup.vue */
 const __VLS_ctx = {};
 let __VLS_components;
 let __VLS_directives;
+/** @type {__VLS_StyleScopedClasses['head']} */ ;
+/** @type {__VLS_StyleScopedClasses['wrap']} */ ;
+/** @type {__VLS_StyleScopedClasses['head']} */ ;
 // CSS variable injection 
 // CSS variable injection end 
 __VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.div)({
@@ -203,108 +203,74 @@ if (__VLS_ctx.profile) {
     __VLS_47.slots.default;
     (__VLS_ctx.profile.status === 1 ? "启用" : "停用");
     var __VLS_47;
-    const __VLS_48 = {}.ElDescriptionsItem;
-    /** @type {[typeof __VLS_components.ElDescriptionsItem, typeof __VLS_components.elDescriptionsItem, typeof __VLS_components.ElDescriptionsItem, typeof __VLS_components.elDescriptionsItem, ]} */ ;
-    // @ts-ignore
-    const __VLS_49 = __VLS_asFunctionalComponent(__VLS_48, new __VLS_48({
-        label: "头像地址",
-    }));
-    const __VLS_50 = __VLS_49({
-        label: "头像地址",
-    }, ...__VLS_functionalComponentArgsRest(__VLS_49));
-    __VLS_51.slots.default;
-    (__VLS_ctx.profile.avatar || "-");
-    var __VLS_51;
     var __VLS_27;
 }
-const __VLS_52 = {}.ElDivider;
+const __VLS_48 = {}.ElDivider;
 /** @type {[typeof __VLS_components.ElDivider, typeof __VLS_components.elDivider, ]} */ ;
 // @ts-ignore
-const __VLS_53 = __VLS_asFunctionalComponent(__VLS_52, new __VLS_52({}));
-const __VLS_54 = __VLS_53({}, ...__VLS_functionalComponentArgsRest(__VLS_53));
-const __VLS_56 = {}.ElForm;
+const __VLS_49 = __VLS_asFunctionalComponent(__VLS_48, new __VLS_48({}));
+const __VLS_50 = __VLS_49({}, ...__VLS_functionalComponentArgsRest(__VLS_49));
+const __VLS_52 = {}.ElForm;
 /** @type {[typeof __VLS_components.ElForm, typeof __VLS_components.elForm, typeof __VLS_components.ElForm, typeof __VLS_components.elForm, ]} */ ;
 // @ts-ignore
-const __VLS_57 = __VLS_asFunctionalComponent(__VLS_56, new __VLS_56({
+const __VLS_53 = __VLS_asFunctionalComponent(__VLS_52, new __VLS_52({
     labelWidth: "90px",
+}));
+const __VLS_54 = __VLS_53({
+    labelWidth: "90px",
+}, ...__VLS_functionalComponentArgsRest(__VLS_53));
+__VLS_55.slots.default;
+const __VLS_56 = {}.ElFormItem;
+/** @type {[typeof __VLS_components.ElFormItem, typeof __VLS_components.elFormItem, typeof __VLS_components.ElFormItem, typeof __VLS_components.elFormItem, ]} */ ;
+// @ts-ignore
+const __VLS_57 = __VLS_asFunctionalComponent(__VLS_56, new __VLS_56({
+    label: "昵称",
 }));
 const __VLS_58 = __VLS_57({
-    labelWidth: "90px",
+    label: "昵称",
 }, ...__VLS_functionalComponentArgsRest(__VLS_57));
 __VLS_59.slots.default;
-const __VLS_60 = {}.ElFormItem;
-/** @type {[typeof __VLS_components.ElFormItem, typeof __VLS_components.elFormItem, typeof __VLS_components.ElFormItem, typeof __VLS_components.elFormItem, ]} */ ;
+const __VLS_60 = {}.ElInput;
+/** @type {[typeof __VLS_components.ElInput, typeof __VLS_components.elInput, ]} */ ;
 // @ts-ignore
 const __VLS_61 = __VLS_asFunctionalComponent(__VLS_60, new __VLS_60({
-    label: "昵称",
+    modelValue: (__VLS_ctx.form.nickname),
+    placeholder: "请输入昵称",
 }));
 const __VLS_62 = __VLS_61({
-    label: "昵称",
+    modelValue: (__VLS_ctx.form.nickname),
+    placeholder: "请输入昵称",
 }, ...__VLS_functionalComponentArgsRest(__VLS_61));
-__VLS_63.slots.default;
-const __VLS_64 = {}.ElInput;
-/** @type {[typeof __VLS_components.ElInput, typeof __VLS_components.elInput, ]} */ ;
-// @ts-ignore
-const __VLS_65 = __VLS_asFunctionalComponent(__VLS_64, new __VLS_64({
-    modelValue: (__VLS_ctx.form.nickname),
-    placeholder: "请输入昵称",
-}));
-const __VLS_66 = __VLS_65({
-    modelValue: (__VLS_ctx.form.nickname),
-    placeholder: "请输入昵称",
-}, ...__VLS_functionalComponentArgsRest(__VLS_65));
-var __VLS_63;
-const __VLS_68 = {}.ElFormItem;
+var __VLS_59;
+const __VLS_64 = {}.ElFormItem;
 /** @type {[typeof __VLS_components.ElFormItem, typeof __VLS_components.elFormItem, typeof __VLS_components.ElFormItem, typeof __VLS_components.elFormItem, ]} */ ;
 // @ts-ignore
-const __VLS_69 = __VLS_asFunctionalComponent(__VLS_68, new __VLS_68({
-    label: "头像URL",
-}));
-const __VLS_70 = __VLS_69({
-    label: "头像URL",
-}, ...__VLS_functionalComponentArgsRest(__VLS_69));
-__VLS_71.slots.default;
-const __VLS_72 = {}.ElInput;
-/** @type {[typeof __VLS_components.ElInput, typeof __VLS_components.elInput, ]} */ ;
-// @ts-ignore
-const __VLS_73 = __VLS_asFunctionalComponent(__VLS_72, new __VLS_72({
-    modelValue: (__VLS_ctx.form.avatar),
-    placeholder: "https://example.com/avatar.png",
-}));
-const __VLS_74 = __VLS_73({
-    modelValue: (__VLS_ctx.form.avatar),
-    placeholder: "https://example.com/avatar.png",
-}, ...__VLS_functionalComponentArgsRest(__VLS_73));
-var __VLS_71;
-const __VLS_76 = {}.ElFormItem;
-/** @type {[typeof __VLS_components.ElFormItem, typeof __VLS_components.elFormItem, typeof __VLS_components.ElFormItem, typeof __VLS_components.elFormItem, ]} */ ;
-// @ts-ignore
-const __VLS_77 = __VLS_asFunctionalComponent(__VLS_76, new __VLS_76({}));
-const __VLS_78 = __VLS_77({}, ...__VLS_functionalComponentArgsRest(__VLS_77));
-__VLS_79.slots.default;
-const __VLS_80 = {}.ElButton;
+const __VLS_65 = __VLS_asFunctionalComponent(__VLS_64, new __VLS_64({}));
+const __VLS_66 = __VLS_65({}, ...__VLS_functionalComponentArgsRest(__VLS_65));
+__VLS_67.slots.default;
+const __VLS_68 = {}.ElButton;
 /** @type {[typeof __VLS_components.ElButton, typeof __VLS_components.elButton, typeof __VLS_components.ElButton, typeof __VLS_components.elButton, ]} */ ;
 // @ts-ignore
-const __VLS_81 = __VLS_asFunctionalComponent(__VLS_80, new __VLS_80({
+const __VLS_69 = __VLS_asFunctionalComponent(__VLS_68, new __VLS_68({
     ...{ 'onClick': {} },
     type: "primary",
     loading: (__VLS_ctx.saving),
 }));
-const __VLS_82 = __VLS_81({
+const __VLS_70 = __VLS_69({
     ...{ 'onClick': {} },
     type: "primary",
     loading: (__VLS_ctx.saving),
-}, ...__VLS_functionalComponentArgsRest(__VLS_81));
-let __VLS_84;
-let __VLS_85;
-let __VLS_86;
-const __VLS_87 = {
+}, ...__VLS_functionalComponentArgsRest(__VLS_69));
+let __VLS_72;
+let __VLS_73;
+let __VLS_74;
+const __VLS_75 = {
     onClick: (__VLS_ctx.save)
 };
-__VLS_83.slots.default;
-var __VLS_83;
-var __VLS_79;
-var __VLS_59;
+__VLS_71.slots.default;
+var __VLS_71;
+var __VLS_67;
+var __VLS_55;
 var __VLS_3;
 /** @type {__VLS_StyleScopedClasses['wrap']} */ ;
 /** @type {__VLS_StyleScopedClasses['head']} */ ;

@@ -132,22 +132,52 @@ onUnmounted(() => {
 
 <style scoped>
 .wrap {
-  padding: 24px;
+  padding: 26px 20px;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
 .head {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 10px;
+}
+
+.head span {
+  font-size: 22px;
+  font-weight: 700;
+  color: #1d3b8b;
 }
 
 .section-title {
-  margin-bottom: 8px;
+  margin-bottom: 10px;
   font-weight: 600;
+  color: #334155;
 }
 
 .tag {
   margin-right: 8px;
   margin-bottom: 8px;
+}
+
+:deep(.el-alert) {
+  border-radius: 12px;
+}
+
+:deep(.el-table) {
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid #e8eef9;
+}
+
+@media (max-width: 768px) {
+  .wrap {
+    padding: 16px 12px 20px;
+  }
+
+  .head {
+    flex-wrap: wrap;
+  }
 }
 </style>

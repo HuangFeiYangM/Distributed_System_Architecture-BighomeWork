@@ -7,3 +7,11 @@ export async function publishMenuApi(payload) {
     const resp = await request.post("/menu", payload);
     return resp.data.data;
 }
+export async function getMenuDishDetailApi(menuDishId) {
+    const resp = await request.get(`/menu/dish/${menuDishId}`);
+    return resp.data.data;
+}
+export async function getMenuDetailApi(menuId) {
+    const resp = await request.get(`/menu/${menuId}`);
+    return resp.data.data;
+}

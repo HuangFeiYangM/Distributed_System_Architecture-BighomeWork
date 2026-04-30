@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>智能食堂 - 窗口管理</title>
+<script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/element-plus/dist/index.css">
+<script src="https://unpkg.com/element-plus/dist/index.full.js"></script>
+<style>
+body { margin:0; font-family:'Helvetica Neue',Helvetica,'PingFang SC','Microsoft YaHei',sans-serif; background:#f5f7fa; }
+.header { background:#fff; box-shadow:0 1px 4px rgba(0,0,0,0.05); padding:0 24px; display:flex; align-items:center; justify-content:space-between; height:60px; position:sticky; top:0; z-index:100; }
+.header-left { display:flex; align-items:center; gap:12px; font-size:18px; font-weight:600; color:#303133; }
+.main { max-width:1100px; margin:24px auto; padding:0 24px; }
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="header">
+    <div class="header-left">🍽️ 智能食堂 <el-tag size="small" type="danger" style="margin-left:8px">管理员</el-tag></div>
+    <div>
+      <el-button text @click="goUsers">👥 用户列表</el-button>
+      <el-button text @click="logout">退出</el-button>
+    </div>
+  </div>
+
+  <div class="main">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <h2 style="margin:0;color:#303133;">🏪 取餐窗口管理</h2>
+      <el-button type="primary" @click="openDialog()">+ 创建窗口</el-button>
+    </div>
+
+    <el-row :gutter="16">
+      <el-col :span="8" v-for="w in windows" :key="w.id" style="margin-bottom:16px;">
+        <el-card shadow="hover">
+          <template #header>
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <span style="font-weight:600;">{{w.name}}</span>
+              <el-tag size="small">{{w.pickupPrefix}}系列</el-tag>
+            </div>
+          </template>
+          <div style="color:#606266;font-size:14px;line-height:1.8;">
+            <div>📍 位置：{{w.location}}</div>
+            <div>👤 商家：{{w.merchantName}} (ID:{{w.merchantId}})</div>
+            <div>📋 当前队列：{{w.queueCount}} 单</div>
+          </div>
+          <div style="margin-top:12px;text-align:right;">
+            <el-button size="small" @click="openDialog(w)">编辑</el-button>
+            <el-button size="small" type="danger" plain @click="deleteWindow(w)">删除</el-button>
+          </div>
+        </el-card>
+      </el-col>
+    </el-row>
+  </div>
+
+  <el-dialog v-model="dialogVisible" :title="isEdit?'编辑窗口':'创建窗口'" width="480px" align-center>
+    <el-form :model="form" label-width="100px">
+      <el-form-item label="窗口名称"><el-input v-model="form.name" placeholder="如：1号档口-盖浇饭"></el-input></el-form-item>
+      <el-form-item label="位置"><el-input v-model="form.location" placeholder="如：食堂一楼东侧"></el-input></el-form-item>
+      <el-form-item label="关联商家">
+        <el-select v-model="form.merchantId" placeholder="选择商家" style="width:100%">
+          <el-option v-for="m in merchants" :key="m.id" :label="m.name" :value="m.id"></el-option>
+        </el-select>
+      </el-form-item>
+      <el-form-item label="取餐前缀"><el-input v-model="form.pickupPrefix" placeholder="如：A、B、C" maxlength="1"></el-input></el-form-item>
+    </el-form>
+    <template #footer>
+      <el-button @click="dialogVisible=false">取消</el-button>
+      <el-button type="primary" @click="saveWindow">保存</el-button>
+    </template>
+  </el-dialog>
+</div>
+<script>
+const { createApp, ref, reactive } = Vue;
+const { ElMessage } = ElementPlus;
+createApp({
+  setup() {
+    const windows = ref([
+      { id:1, name:'1号档口-盖浇饭', location:'食堂一楼东侧', merchantId:2, merchantName:'1号档口老板', pickupPrefix:'A', queueCount:3 },
+      { id:2, name:'2号档口-面食', location:'食堂一楼西侧', merchantId:3, merchantName:'2号档口老板', pickupPrefix:'B', queueCount:1 },
+      { id:3, name:'3号档口-小炒', location:'食堂二楼南侧', merchantId:4, merchantName:'3号档口老板', pickupPrefix:'C', queueCount:0 },
+    ]);
+    const merchants = ref([
+      { id:2, name:'1号档口老板' },
+      { id:3, name:'2号档口老板' },
+      { id:4, name:'3号档口老板' },
+    ]);
+    const dialogVisible = ref(false);
+    const isEdit = ref(false);
+    const form = reactive({ id:null, name:'', location:'', merchantId:null, pickupPrefix:'' });
+    let nextId = 4;
+
+    const openDialog = (row) => {
+      if(row){ Object.assign(form, row); isEdit.value=true; }
+      else { Object.assign(form, { id:null, name:'', location:'', merchantId:null, pickupPrefix:'' }); isEdit.value=false; }
+      dialogVisible.value=true;
+    };
+    const saveWindow = () => {
+      if(!form.name||!form.location||!form.merchantId||!form.pickupPrefix){ ElMessage.warning('请填写完整'); return; }
+      const m = merchants.value.find(x=>x.id===form.merchantId);
+      if(isEdit.value){ const idx=windows.value.findIndex(w=>w.id===form.id); if(idx>-1) windows.value[idx]={...form, merchantName:m.name, queueCount:windows.value[idx].queueCount}; }
+      else { windows.value.push({ ...form, id:nextId++, merchantName:m.name, queueCount:0 }); }
+      dialogVisible.value=false;
+      ElMessage.success(isEdit.value?'修改成功':'创建成功');
+    };
+    const deleteWindow = (w) => { windows.value = windows.value.filter(x=>x.id!==w.id); ElMessage.success('删除成功'); };
+    const goUsers = () => location.href='admin-users.html';
+    const logout = () => { ElMessage.success('已退出'); setTimeout(()=>location.href='login.html',400); };
+    return { windows, merchants, dialogVisible, isEdit, form, openDialog, saveWindow, deleteWindow, goUsers, logout };
+  }
+}).use(ElementPlus).mount('#app');
+</script>
+</body>
+</html>

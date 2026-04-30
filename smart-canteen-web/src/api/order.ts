@@ -49,6 +49,11 @@ export async function updateOrderStatusApi(orderId: number, action: "accept" | "
   return resp.data;
 }
 
+export async function cancelOrderApi(orderId: number) {
+  const resp = await request.put<{ code: number; msg: string; data: null }>(`/order/${orderId}/cancel`);
+  return resp.data;
+}
+
 export async function getOrderDetailApi(orderId: number) {
   const resp = await request.get<{ code: number; msg: string; data: OrderRecord }>(`/order/${orderId}`);
   return resp.data.data;

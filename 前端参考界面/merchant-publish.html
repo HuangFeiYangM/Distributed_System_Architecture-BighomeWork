@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>智能食堂 - 发布菜单</title>
+<script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/element-plus/dist/index.css">
+<script src="https://unpkg.com/element-plus/dist/index.full.js"></script>
+<style>
+body { margin:0; font-family:'Helvetica Neue',Helvetica,'PingFang SC','Microsoft YaHei',sans-serif; background:#f5f7fa; }
+.header { background:#fff; box-shadow:0 1px 4px rgba(0,0,0,0.05); padding:0 24px; display:flex; align-items:center; justify-content:space-between; height:60px; position:sticky; top:0; z-index:100; }
+.header-left { display:flex; align-items:center; gap:12px; font-size:18px; font-weight:600; color:#303133; }
+.main { max-width:900px; margin:24px auto; padding:0 24px; }
+.dish-select-item { display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid #f0f0f0; }
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="header">
+    <div class="header-left">🍽️ 智能食堂 <el-tag size="small" type="warning" style="margin-left:8px">商家端</el-tag></div>
+    <div>
+      <el-button text @click="goOrders">📋 订单管理</el-button>
+      <el-button text @click="goDishes">🍲 菜品管理</el-button>
+      <el-button text @click="logout">退出</el-button>
+    </div>
+  </div>
+
+  <div class="main">
+    <h2 style="color:#303133;margin-bottom:20px;">📅 发布每日菜单</h2>
+    <el-card shadow="never">
+      <el-form :model="form" label-width="100px" label-position="right">
+        <el-form-item label="菜单名称"><el-input v-model="form.name" placeholder="如：今日午餐"></el-input></el-form-item>
+        <el-form-item label="售卖日期">
+          <el-date-picker v-model="form.saleDate" type="date" placeholder="选择日期" style="width:100%" value-format="YYYY-MM-DD"></el-date-picker>
+        </el-form-item>
+        <el-form-item label="开始时间">
+          <el-time-picker v-model="form.startTime" placeholder="开始时间" style="width:100%" value-format="HH:mm:ss"></el-time-picker>
+        </el-form-item>
+        <el-form-item label="结束时间">
+          <el-time-picker v-model="form.endTime" placeholder="结束时间" style="width:100%" value-format="HH:mm:ss"></el-time-picker>
+        </el-form-item>
+      </el-form>
+
+      <el-divider content-position="left">选择菜品并设置售价与库存</el-divider>
+
+      <div v-for="d in dishList" :key="d.id" class="dish-select-item">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <el-checkbox v-model="d.selected" size="large"></el-checkbox>
+          <span style="font-size:24px;">{{d.emoji}}</span>
+          <div>
+            <div style="font-weight:500;">{{d.name}}</div>
+            <div style="font-size:12px;color:#909399;">原价 ¥{{d.price.toFixed(2)}}</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:12px;align-items:center;" v-if="d.selected">
+          <el-form-item label="售价" style="margin:0;"><el-input-number v-model="d.salePrice" :min="0" :precision="2" :controls="false" style="width:90px"></el-input-number></el-form-item>
+          <el-form-item label="库存" style="margin:0;"><el-input-number v-model="d.stock" :min="0" :controls="false" style="width:80px"></el-input-number></el-form-item>
+        </div>
+      </div>
+
+      <div style="text-align:right;margin-top:24px;">
+        <el-button type="primary" size="large" @click="publishMenu" :loading="publishing">发布菜单</el-button>
+      </div>
+    </el-card>
+  </div>
+</div>
+<script>
+const { createApp, reactive, ref } = Vue;
+const { ElMessage } = ElementPlus;
+createApp({
+  setup() {
+    const form = reactive({ name:'今日午餐', saleDate:'2026-04-30', startTime:'10:30:00', endTime:'13:30:00' });
+    const dishList = ref([
+      { id:1, name:'宫保鸡丁', price:15.00, emoji:'🍗', selected:true, salePrice:15.00, stock:100 },
+      { id:2, name:'糖醋里脊', price:12.00, emoji:'🥩', selected:true, salePrice:12.00, stock:50 },
+      { id:3, name:'麻婆豆腐', price:8.00, emoji:'🍲', selected:false, salePrice:8.00, stock:80 },
+      { id:4, name:'番茄炒蛋', price:7.00, emoji:'🍳', selected:false, salePrice:7.00, stock:60 },
+    ]);
+    const publishing = ref(false);
+
+    const publishMenu = () => {
+      const selected = dishList.value.filter(d=>d.selected);
+      if(selected.length===0){ ElMessage.warning('请至少选择一个菜品'); return; }
+      publishing.value=true;
+      setTimeout(() => { publishing.value=false; ElMessage.success('菜单发布成功'); }, 1000);
+    };
+    const goOrders = () => location.href='merchant-orders.html';
+    const goDishes = () => location.href='merchant-dishes.html';
+    const logout = () => { ElMessage.success('已退出'); setTimeout(()=>location.href='login.html',400); };
+    return { form, dishList, publishing, publishMenu, goOrders, goDishes, logout };
+  }
+}).use(ElementPlus).mount('#app');
+</script>
+</body>
+</html>

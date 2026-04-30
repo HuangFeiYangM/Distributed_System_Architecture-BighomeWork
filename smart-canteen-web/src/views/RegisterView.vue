@@ -1,24 +1,30 @@
 <template>
   <div class="page">
     <div class="bg-glow" />
-    <el-card class="login-card">
+    <el-card class="register-card">
       <template #header>
         <div class="title-wrap">
-          <div class="title">智能食堂系统</div>
-          <div class="subtitle">欢迎登录统一工作台</div>
+          <div class="title">用户注册</div>
+          <div class="subtitle">创建账号后可返回登录</div>
         </div>
       </template>
-      <el-form :model="form" label-width="70px">
+      <el-form :model="form" label-width="80px">
         <el-form-item label="手机号">
           <el-input v-model="form.phone" placeholder="请输入手机号" />
         </el-form-item>
         <el-form-item label="密码">
           <el-input v-model="form.password" type="password" show-password placeholder="请输入密码" />
         </el-form-item>
+        <el-form-item label="昵称">
+          <el-input v-model="form.nickname" placeholder="请输入昵称" />
+        </el-form-item>
+        <el-form-item label="学号">
+          <el-input v-model="form.studentNo" placeholder="请输入学号/工号" />
+        </el-form-item>
         <el-form-item>
           <el-space>
-            <el-button type="primary" :loading="loading" @click="onLogin">登录</el-button>
-            <el-button @click="goRegister">去注册</el-button>
+            <el-button type="primary" :loading="loading" @click="onRegister">注册</el-button>
+            <el-button @click="goLogin">返回登录</el-button>
           </el-space>
         </el-form-item>
       </el-form>
@@ -30,35 +36,34 @@
 import { reactive, ref } from "vue";
 import { useRouter } from "vue-router";
 import { ElMessage } from "element-plus";
-import { loginApi } from "../api/user";
-import { useAuthStore } from "../stores/auth";
+import { registerApi } from "../api/user";
 
 const router = useRouter();
-const authStore = useAuthStore();
 const loading = ref(false);
 const form = reactive({
   phone: "",
-  password: ""
+  password: "",
+  nickname: "",
+  studentNo: ""
 });
 
-const onLogin = async () => {
-  if (!form.phone || !form.password) {
-    ElMessage.warning("请输入手机号和密码");
+const onRegister = async () => {
+  if (!form.phone || !form.password || !form.nickname || !form.studentNo) {
+    ElMessage.warning("请填写完整注册信息");
     return;
   }
   loading.value = true;
   try {
-    const data = await loginApi(form);
-    authStore.setLogin(data);
-    ElMessage.success("登录成功");
-    await router.push("/");
+    await registerApi(form);
+    ElMessage.success("注册成功，请登录");
+    await router.push("/login");
   } finally {
     loading.value = false;
   }
 };
 
-const goRegister = async () => {
-  await router.push("/register");
+const goLogin = async () => {
+  await router.push("/login");
 };
 </script>
 
@@ -75,27 +80,27 @@ const goRegister = async () => {
 
 .bg-glow {
   position: absolute;
-  width: 560px;
-  height: 560px;
+  width: 580px;
+  height: 580px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(70, 130, 255, 0.28) 0%, rgba(70, 130, 255, 0) 70%);
-  top: -120px;
-  right: -120px;
+  background: radial-gradient(circle, rgba(76, 132, 255, 0.26) 0%, rgba(76, 132, 255, 0) 70%);
+  bottom: -120px;
+  left: -120px;
 }
 
 .bg-glow::after {
   content: "";
   position: absolute;
-  width: 240px;
-  height: 240px;
+  width: 280px;
+  height: 280px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(96, 165, 250, 0.34) 0%, rgba(96, 165, 250, 0) 72%);
-  left: -400px;
-  top: 360px;
+  background: radial-gradient(circle, rgba(129, 140, 248, 0.24) 0%, rgba(129, 140, 248, 0) 70%);
+  right: -520px;
+  top: -280px;
 }
 
-.login-card {
-  width: 440px;
+.register-card {
+  width: 500px;
   z-index: 1;
 }
 

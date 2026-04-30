@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>智能食堂 - 登录</title>
+<script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/element-plus/dist/index.css">
+<script src="https://unpkg.com/element-plus/dist/index.full.js"></script>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family: 'Helvetica Neue', Helvetica, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', Arial, sans-serif; background: linear-gradient(135deg, #f5f7fa 0%, #e4e7ed 100%); min-height:100vh; }
+.login-container { display:flex; justify-content:center; align-items:center; min-height:100vh; }
+.login-box { width:440px; background:#fff; border-radius:12px; box-shadow:0 8px 24px rgba(0,0,0,0.08); padding:40px; }
+.login-header { text-align:center; margin-bottom:32px; }
+.login-header h1 { font-size:24px; color:#303133; margin-bottom:8px; }
+.login-header p { font-size:14px; color:#909399; }
+.role-tabs { display:flex; justify-content:center; gap:12px; margin-bottom:24px; }
+.role-tag { padding:6px 16px; border-radius:16px; font-size:13px; cursor:pointer; border:1px solid #dcdfe6; color:#606266; transition:all .2s; }
+.role-tag.active { background:#409EFF; color:#fff; border-color:#409EFF; }
+.demo-accounts { background:#f5f7fa; border-radius:8px; padding:12px; margin-bottom:20px; font-size:12px; color:#606266; }
+.demo-accounts code { background:#e4e7ed; padding:2px 6px; border-radius:4px; font-family:monospace; }
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="login-container">
+    <div class="login-box">
+      <div class="login-header">
+        <h1>🍽️ 智能食堂系统</h1>
+        <p>校园/园区智慧餐饮服务平台</p>
+      </div>
+
+      <div class="role-tabs">
+        <span class="role-tag" :class="{active: role==='student'}" @click="role='student'">学生端</span>
+        <span class="role-tag" :class="{active: role==='merchant'}" @click="role='merchant'">商家端</span>
+        <span class="role-tag" :class="{active: role==='admin'}" @click="role='admin'">管理员</span>
+      </div>
+
+      <div class="demo-accounts">
+        <div style="font-weight:600;margin-bottom:6px;">演示账号（点击自动填充）</div>
+        <div style="display:flex;flex-direction:column;gap:4px;">
+          <div @click="fillAccount('13800000002','user123')" style="cursor:pointer;">
+            学生 <code>13800000002</code> / <code>user123</code>
+          </div>
+          <div @click="fillAccount('13800000001','merchant123')" style="cursor:pointer;">
+            商家 <code>13800000001</code> / <code>merchant123</code>
+          </div>
+          <div @click="fillAccount('13800000000','admin123')" style="cursor:pointer;">
+            管理员 <code>13800000000</code> / <code>admin123</code>
+          </div>
+        </div>
+      </div>
+
+      <el-tabs v-model="activeTab" stretch>
+        <el-tab-pane label="账号登录" name="login">
+          <el-form :model="loginForm" label-position="top" @submit.prevent="handleLogin">
+            <el-form-item label="手机号">
+              <el-input v-model="loginForm.phone" placeholder="请输入手机号" prefix-icon="Phone" size="large"></el-input>
+            </el-form-item>
+            <el-form-item label="密码">
+              <el-input v-model="loginForm.password" type="password" placeholder="请输入密码" prefix-icon="Lock" size="large" show-password></el-input>
+            </el-form-item>
+            <el-form-item>
+              <el-button type="primary" size="large" style="width:100%" @click="handleLogin" :loading="loading">登录</el-button>
+            </el-form-item>
+          </el-form>
+        </el-tab-pane>
+        <el-tab-pane label="注册账号" name="register">
+          <el-form :model="regForm" label-position="top" @submit.prevent="handleRegister">
+            <el-form-item label="手机号">
+              <el-input v-model="regForm.phone" placeholder="请输入手机号" prefix-icon="Phone" size="large"></el-input>
+            </el-form-item>
+            <el-form-item label="密码">
+              <el-input v-model="regForm.password" type="password" placeholder="请输入密码" prefix-icon="Lock" size="large" show-password></el-input>
+            </el-form-item>
+            <el-form-item label="昵称">
+              <el-input v-model="regForm.nickname" placeholder="请输入昵称" prefix-icon="User" size="large"></el-input>
+            </el-form-item>
+            <el-form-item label="学工号">
+              <el-input v-model="regForm.studentNo" placeholder="请输入学工号" prefix-icon="Document" size="large"></el-input>
+            </el-form-item>
+            <el-form-item>
+              <el-button type="primary" size="large" style="width:100%" @click="handleRegister" :loading="loading">注册</el-button>
+            </el-form-item>
+          </el-form>
+        </el-tab-pane>
+      </el-tabs>
+
+      <div style="text-align:center;margin-top:16px;">
+        <el-link type="primary" href="display.html" target="_blank">🖥️ 打开大屏取餐展示</el-link>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+const { createApp, reactive, ref } = Vue;
+const { ElMessage } = ElementPlus;
+createApp({
+  setup() {
+    const activeTab = ref('login');
+    const role = ref('student');
+    const loading = ref(false);
+    const loginForm = reactive({ phone: '', password: '' });
+    const regForm = reactive({ phone: '', password: '', nickname: '', studentNo: '' });
+
+    const fillAccount = (phone, pwd) => {
+      loginForm.phone = phone;
+      loginForm.password = pwd;
+      if(phone==='13800000000') role.value='admin';
+      else if(phone==='13800000001') role.value='merchant';
+      else role.value='student';
+      ElMessage.success(`已填充${role.value==='admin'?'管理员':role.value==='merchant'?'商家':'学生'}账号`);
+    };
+
+    const handleLogin = () => {
+      if(!loginForm.phone || !loginForm.password){ ElMessage.warning('请填写完整信息'); return; }
+      loading.value = true;
+      setTimeout(() => {
+        loading.value = false;
+        ElMessage.success('登录成功');
+        const map = { student: 'student-today.html', merchant: 'merchant-orders.html', admin: 'admin-windows.html' };
+        setTimeout(() => location.href = map[role.value], 400);
+      }, 800);
+    };
+
+    const handleRegister = () => {
+      if(!regForm.phone || !regForm.password || !regForm.nickname){ ElMessage.warning('请填写完整信息'); return; }
+      loading.value = true;
+      setTimeout(() => { loading.value = false; ElMessage.success('注册成功，请登录'); activeTab.value='login'; }, 800);
+    };
+
+    return { activeTab, role, loginForm, regForm, loading, handleLogin, handleRegister, fillAccount };
+  }
+}).use(ElementPlus).mount('#app');
+</script>
+</body>
+</html>

@@ -11,6 +11,10 @@ export async function updateOrderStatusApi(orderId, action) {
     const resp = await request.put(`/order/${orderId}/${action}`);
     return resp.data;
 }
+export async function cancelOrderApi(orderId) {
+    const resp = await request.put(`/order/${orderId}/cancel`);
+    return resp.data;
+}
 export async function getOrderDetailApi(orderId) {
     const resp = await request.get(`/order/${orderId}`);
     return resp.data.data;
