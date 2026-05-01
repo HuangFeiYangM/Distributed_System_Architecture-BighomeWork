@@ -20,9 +20,11 @@ public enum StatusCode {
 
     STOCK_NOT_ENOUGH(2002, "库存不足"),
     MENU_NOT_FOUND(2003, "菜单或菜品不存在"),
+    STOCK_CONFLICT(2004, "库存状态冲突"),
 
     ORDER_NOT_FOUND(3001, "订单不存在"),
     ORDER_STATUS_ERROR(3002, "订单状态不允许此操作"),
+    DISH_MENU_CONFLICT(3008, "菜品已被生效菜单引用，不可修改"),
 
     QUEUE_EMPTY(4002, "当前队列无订单"),
     PICKUP_VERIFY_FAILED(4003, "取餐码校验失败"),

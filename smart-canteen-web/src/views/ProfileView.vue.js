@@ -1,7 +1,7 @@
 import { onMounted, reactive, ref } from "vue";
 import { useRouter } from "vue-router";
 import { ElMessage } from "element-plus";
-import { meApi, refreshTokenApi, updateMeApi } from "../api/user";
+import { changePasswordApi, meApi, refreshTokenApi, updateMeApi } from "../api/user";
 import { useAuthStore } from "../stores/auth";
 const router = useRouter();
 const authStore = useAuthStore();
@@ -11,6 +11,11 @@ const refreshing = ref(false);
 const form = reactive({
     nickname: ""
 });
+const pwdForm = reactive({
+    oldPassword: "",
+    newPassword: ""
+});
+const pwdSaving = ref(false);
 const roleLabel = (role) => {
     if (role === 2)
         return "管理员";
@@ -34,6 +39,30 @@ const save = async () => {
     }
     finally {
         saving.value = false;
+    }
+};
+const savePassword = async () => {
+    if (!pwdForm.oldPassword.trim()) {
+        ElMessage.warning("请输入当前密码");
+        return;
+    }
+    const np = pwdForm.newPassword.trim();
+    if (np.length < 6 || np.length > 20) {
+        ElMessage.warning("新密码长度需为 6～20 位");
+        return;
+    }
+    pwdSaving.value = true;
+    try {
+        await changePasswordApi({
+            oldPassword: pwdForm.oldPassword,
+            newPassword: np
+        });
+        ElMessage.success("密码已更新");
+        pwdForm.oldPassword = "";
+        pwdForm.newPassword = "";
+    }
+    finally {
+        pwdSaving.value = false;
     }
 };
 const refreshToken = async () => {
@@ -271,6 +300,110 @@ __VLS_71.slots.default;
 var __VLS_71;
 var __VLS_67;
 var __VLS_55;
+const __VLS_76 = {}.ElDivider;
+/** @type {[typeof __VLS_components.ElDivider, typeof __VLS_components.elDivider, typeof __VLS_components.ElDivider, typeof __VLS_components.elDivider, ]} */ ;
+// @ts-ignore
+const __VLS_77 = __VLS_asFunctionalComponent(__VLS_76, new __VLS_76({
+    contentPosition: "left",
+}));
+const __VLS_78 = __VLS_77({
+    contentPosition: "left",
+}, ...__VLS_functionalComponentArgsRest(__VLS_77));
+__VLS_79.slots.default;
+var __VLS_79;
+const __VLS_80 = {}.ElForm;
+/** @type {[typeof __VLS_components.ElForm, typeof __VLS_components.elForm, typeof __VLS_components.ElForm, typeof __VLS_components.elForm, ]} */ ;
+// @ts-ignore
+const __VLS_81 = __VLS_asFunctionalComponent(__VLS_80, new __VLS_80({
+    labelWidth: "90px",
+}));
+const __VLS_82 = __VLS_81({
+    labelWidth: "90px",
+}, ...__VLS_functionalComponentArgsRest(__VLS_81));
+__VLS_83.slots.default;
+const __VLS_84 = {}.ElFormItem;
+/** @type {[typeof __VLS_components.ElFormItem, typeof __VLS_components.elFormItem, typeof __VLS_components.ElFormItem, typeof __VLS_components.elFormItem, ]} */ ;
+// @ts-ignore
+const __VLS_85 = __VLS_asFunctionalComponent(__VLS_84, new __VLS_84({
+    label: "当前密码",
+}));
+const __VLS_86 = __VLS_85({
+    label: "当前密码",
+}, ...__VLS_functionalComponentArgsRest(__VLS_85));
+__VLS_87.slots.default;
+const __VLS_88 = {}.ElInput;
+/** @type {[typeof __VLS_components.ElInput, typeof __VLS_components.elInput, ]} */ ;
+// @ts-ignore
+const __VLS_89 = __VLS_asFunctionalComponent(__VLS_88, new __VLS_88({
+    modelValue: (__VLS_ctx.pwdForm.oldPassword),
+    type: "password",
+    showPassword: true,
+    placeholder: "请输入当前密码",
+}));
+const __VLS_90 = __VLS_89({
+    modelValue: (__VLS_ctx.pwdForm.oldPassword),
+    type: "password",
+    showPassword: true,
+    placeholder: "请输入当前密码",
+}, ...__VLS_functionalComponentArgsRest(__VLS_89));
+var __VLS_87;
+const __VLS_92 = {}.ElFormItem;
+/** @type {[typeof __VLS_components.ElFormItem, typeof __VLS_components.elFormItem, typeof __VLS_components.ElFormItem, typeof __VLS_components.elFormItem, ]} */ ;
+// @ts-ignore
+const __VLS_93 = __VLS_asFunctionalComponent(__VLS_92, new __VLS_92({
+    label: "新密码",
+}));
+const __VLS_94 = __VLS_93({
+    label: "新密码",
+}, ...__VLS_functionalComponentArgsRest(__VLS_93));
+__VLS_95.slots.default;
+const __VLS_96 = {}.ElInput;
+/** @type {[typeof __VLS_components.ElInput, typeof __VLS_components.elInput, ]} */ ;
+// @ts-ignore
+const __VLS_97 = __VLS_asFunctionalComponent(__VLS_96, new __VLS_96({
+    modelValue: (__VLS_ctx.pwdForm.newPassword),
+    type: "password",
+    showPassword: true,
+    placeholder: "6～20 位，与注册一致",
+}));
+const __VLS_98 = __VLS_97({
+    modelValue: (__VLS_ctx.pwdForm.newPassword),
+    type: "password",
+    showPassword: true,
+    placeholder: "6～20 位，与注册一致",
+}, ...__VLS_functionalComponentArgsRest(__VLS_97));
+var __VLS_95;
+const __VLS_100 = {}.ElFormItem;
+/** @type {[typeof __VLS_components.ElFormItem, typeof __VLS_components.elFormItem, typeof __VLS_components.ElFormItem, typeof __VLS_components.elFormItem, ]} */ ;
+// @ts-ignore
+const __VLS_101 = __VLS_asFunctionalComponent(__VLS_100, new __VLS_100({}));
+const __VLS_102 = __VLS_101({}, ...__VLS_functionalComponentArgsRest(__VLS_101));
+__VLS_103.slots.default;
+const __VLS_104 = {}.ElButton;
+/** @type {[typeof __VLS_components.ElButton, typeof __VLS_components.elButton, typeof __VLS_components.ElButton, typeof __VLS_components.elButton, ]} */ ;
+// @ts-ignore
+const __VLS_105 = __VLS_asFunctionalComponent(__VLS_104, new __VLS_104({
+    ...{ 'onClick': {} },
+    type: "primary",
+    plain: true,
+    loading: (__VLS_ctx.pwdSaving),
+}));
+const __VLS_106 = __VLS_105({
+    ...{ 'onClick': {} },
+    type: "primary",
+    plain: true,
+    loading: (__VLS_ctx.pwdSaving),
+}, ...__VLS_functionalComponentArgsRest(__VLS_105));
+let __VLS_108;
+let __VLS_109;
+let __VLS_110;
+const __VLS_111 = {
+    onClick: (__VLS_ctx.savePassword)
+};
+__VLS_107.slots.default;
+var __VLS_107;
+var __VLS_103;
+var __VLS_83;
 var __VLS_3;
 /** @type {__VLS_StyleScopedClasses['wrap']} */ ;
 /** @type {__VLS_StyleScopedClasses['head']} */ ;
@@ -282,8 +415,11 @@ const __VLS_self = (await import('vue')).defineComponent({
             saving: saving,
             refreshing: refreshing,
             form: form,
+            pwdForm: pwdForm,
+            pwdSaving: pwdSaving,
             roleLabel: roleLabel,
             save: save,
+            savePassword: savePassword,
             refreshToken: refreshToken,
             goHome: goHome,
         };

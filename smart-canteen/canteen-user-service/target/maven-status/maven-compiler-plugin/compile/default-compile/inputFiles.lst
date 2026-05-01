@@ -2,6 +2,8 @@ C:\Users\Huang_FeiYang\Desktop\testarea\Distributed_System_Architecture\smart-ca
 C:\Users\Huang_FeiYang\Desktop\testarea\Distributed_System_Architecture\smart-canteen\canteen-user-service\src\main\java\com\canteen\user\config\MybatisMetaObjectHandler.java
 C:\Users\Huang_FeiYang\Desktop\testarea\Distributed_System_Architecture\smart-canteen\canteen-user-service\src\main\java\com\canteen\user\config\MybatisPlusConfig.java
 C:\Users\Huang_FeiYang\Desktop\testarea\Distributed_System_Architecture\smart-canteen\canteen-user-service\src\main\java\com\canteen\user\controller\UserController.java
+C:\Users\Huang_FeiYang\Desktop\testarea\Distributed_System_Architecture\smart-canteen\canteen-user-service\src\main\java\com\canteen\user\dto\AdminResetPasswordDTO.java
+C:\Users\Huang_FeiYang\Desktop\testarea\Distributed_System_Architecture\smart-canteen\canteen-user-service\src\main\java\com\canteen\user\dto\ChangePasswordDTO.java
 C:\Users\Huang_FeiYang\Desktop\testarea\Distributed_System_Architecture\smart-canteen\canteen-user-service\src\main\java\com\canteen\user\dto\LoginDTO.java
 C:\Users\Huang_FeiYang\Desktop\testarea\Distributed_System_Architecture\smart-canteen\canteen-user-service\src\main\java\com\canteen\user\dto\RegisterDTO.java
 C:\Users\Huang_FeiYang\Desktop\testarea\Distributed_System_Architecture\smart-canteen\canteen-user-service\src\main\java\com\canteen\user\dto\UserUpdateDTO.java

@@ -51,8 +51,13 @@ public class DishController {
     public Result<Page<Dish>> list(
             @RequestParam(value = "page", defaultValue = "1") long page,
             @RequestParam(value = "size", defaultValue = "10") long size,
-            @RequestParam(value = "merchantId", required = false) Long merchantId) {
-        return Result.success(dishService.page(page, size, merchantId));
+            @RequestParam(value = "merchantId", required = false) Long merchantId,
+            @RequestParam(value = "name", required = false) String name,
+            @RequestParam(value = "category", required = false) String category,
+            @RequestParam(value = "status", required = false) Integer status,
+            @RequestParam(value = "minPrice", required = false) java.math.BigDecimal minPrice,
+            @RequestParam(value = "maxPrice", required = false) java.math.BigDecimal maxPrice) {
+        return Result.success(dishService.page(page, size, merchantId, name, category, status, minPrice, maxPrice));
     }
 
     @PutMapping("/{id}/status")

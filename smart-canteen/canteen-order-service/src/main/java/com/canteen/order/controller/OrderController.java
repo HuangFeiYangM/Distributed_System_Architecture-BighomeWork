@@ -3,6 +3,7 @@ package com.canteen.order.controller;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.canteen.common.result.Result;
 import com.canteen.order.dto.CreateOrderDTO;
+import com.canteen.order.dto.OrderBatchStatusDTO;
 import com.canteen.order.entity.CanteenOrder;
 import com.canteen.order.service.OrdersAppService;
 import com.canteen.order.vo.OrderBriefVO;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/order")
@@ -42,6 +44,32 @@ public class OrderController {
                                    @RequestParam(value = "page", defaultValue = "1") long page,
                                    @RequestParam(value = "size", defaultValue = "10") long size) {
         return Result.success(ordersAppService.myOrders(request, page, size));
+    }
+
+    @GetMapping("/merchant")
+    public Result<Page<OrderVO>> merchant(HttpServletRequest request,
+                                          @RequestParam(value = "page", defaultValue = "1") long page,
+                                          @RequestParam(value = "size", defaultValue = "10") long size,
+                                          @RequestParam(value = "status", required = false) Integer status,
+                                          @RequestParam(value = "windowId", required = false) Long windowId,
+                                          @RequestParam(value = "keyword", required = false) String keyword,
+                                          @RequestParam(value = "dateFrom", required = false) String dateFrom,
+                                          @RequestParam(value = "dateTo", required = false) String dateTo) {
+        return Result.success(ordersAppService.merchantOrders(request, page, size, status, windowId, keyword, dateFrom, dateTo));
+    }
+
+    @GetMapping("/list")
+    public Result<Page<OrderVO>> list(HttpServletRequest request,
+                                      @RequestParam(value = "page", defaultValue = "1") long page,
+                                      @RequestParam(value = "size", defaultValue = "10") long size,
+                                      @RequestParam(value = "status", required = false) Integer status,
+                                      @RequestParam(value = "merchantId", required = false) Long merchantId,
+                                      @RequestParam(value = "windowId", required = false) Long windowId,
+                                      @RequestParam(value = "userId", required = false) Long userId,
+                                      @RequestParam(value = "keyword", required = false) String keyword,
+                                      @RequestParam(value = "dateFrom", required = false) String dateFrom,
+                                      @RequestParam(value = "dateTo", required = false) String dateTo) {
+        return Result.success(ordersAppService.adminOrders(request, page, size, status, merchantId, windowId, userId, keyword, dateFrom, dateTo));
     }
 
     @PutMapping("/{id}/accept")
@@ -77,5 +105,27 @@ public class OrderController {
     @GetMapping("/pickup-code/{code}")
     public Result<OrderBriefVO> byPickupCode(@PathVariable("code") String code) {
         return Result.success(ordersAppService.requireByPickupCode(code));
+    }
+
+    @PostMapping("/{id}/remark")
+    public Result<Void> remark(HttpServletRequest request, @PathVariable("id") Long id, @RequestParam("remark") String remark) {
+        ordersAppService.remark(request, id, remark);
+        return Result.success();
+    }
+
+    @PostMapping("/batch/status")
+    public Result<Void> batchStatus(HttpServletRequest request, @RequestBody OrderBatchStatusDTO dto) {
+        ordersAppService.batchStatus(request, dto);
+        return Result.success();
+    }
+
+    @GetMapping("/stat/merchant/dashboard")
+    public Result<Map<String, Object>> merchantDashboard(HttpServletRequest request) {
+        return Result.success(ordersAppService.merchantDashboard(request));
+    }
+
+    @GetMapping("/stat/admin/dashboard")
+    public Result<Map<String, Object>> adminDashboard(HttpServletRequest request) {
+        return Result.success(ordersAppService.adminDashboard(request));
     }
 }

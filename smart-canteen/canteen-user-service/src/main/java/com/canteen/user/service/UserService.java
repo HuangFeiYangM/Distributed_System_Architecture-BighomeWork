@@ -6,6 +6,7 @@ import com.canteen.common.constant.RoleNames;
 import com.canteen.common.exception.BusinessException;
 import com.canteen.common.result.StatusCode;
 import com.canteen.common.util.JwtUtil;
+import com.canteen.user.dto.ChangePasswordDTO;
 import com.canteen.user.dto.LoginDTO;
 import com.canteen.user.dto.RegisterDTO;
 import com.canteen.user.dto.UserUpdateDTO;
@@ -160,13 +161,88 @@ public class UserService {
         userMapper.updateById(user);
     }
 
-    public Page<UserVO> list(HttpServletRequest request, long page, long size) {
+    public Page<UserVO> list(HttpServletRequest request, long page, long size, Integer role, Integer status,
+                             String phone, String nickname, String studentNo) {
         requireAdmin(request);
         Page<User> p = new Page<>(page, size);
-        userMapper.selectPage(p, new LambdaQueryWrapper<User>().orderByDesc(User::getId));
+        LambdaQueryWrapper<User> q = new LambdaQueryWrapper<User>().orderByDesc(User::getId);
+        if (role != null) {
+            q.eq(User::getRole, role);
+        }
+        if (status != null) {
+            q.eq(User::getStatus, status);
+        }
+        if (phone != null && !phone.isBlank()) {
+            q.like(User::getPhone, phone.trim());
+        }
+        if (nickname != null && !nickname.isBlank()) {
+            q.like(User::getNickname, nickname.trim());
+        }
+        if (studentNo != null && !studentNo.isBlank()) {
+            q.like(User::getStudentNo, studentNo.trim());
+        }
+        userMapper.selectPage(p, q);
         Page<UserVO> out = new Page<>(p.getCurrent(), p.getSize(), p.getTotal());
         out.setRecords(p.getRecords().stream().map(this::toVo).toList());
         return out;
+    }
+
+    @Transactional
+    public void updateStatus(HttpServletRequest request, Long id, Integer value) {
+        requireAdmin(request);
+        if (value == null || (value != 0 && value != 1)) {
+            throw new BusinessException(StatusCode.PARAM_ERROR);
+        }
+        User user = userMapper.selectById(id);
+        if (user == null) {
+            throw new BusinessException(StatusCode.USER_NOT_FOUND);
+        }
+        user.setStatus(value);
+        userMapper.updateById(user);
+    }
+
+    @Transactional
+    public void deleteUser(HttpServletRequest request, Long id) {
+        requireAdmin(request);
+        User user = userMapper.selectById(id);
+        if (user == null) {
+            throw new BusinessException(StatusCode.USER_NOT_FOUND);
+        }
+        if (Integer.valueOf(2).equals(user.getRole())) {
+            throw new BusinessException(StatusCode.FORBIDDEN, "管理员账号不可删除");
+        }
+        userMapper.deleteById(id);
+    }
+
+    @Transactional
+    public void resetPassword(HttpServletRequest request, Long id, String newPlainPassword) {
+        requireAdmin(request);
+        User user = userMapper.selectById(id);
+        if (user == null) {
+            throw new BusinessException(StatusCode.USER_NOT_FOUND);
+        }
+        user.setPassword(passwordEncoder.encode(newPlainPassword));
+        userMapper.updateById(user);
+    }
+
+    @Transactional
+    public void changePassword(HttpServletRequest request, ChangePasswordDTO dto) {
+        Long userId = resolveUserId(request);
+        User user = userMapper.selectById(userId);
+        if (user == null) {
+            throw new BusinessException(StatusCode.USER_NOT_FOUND);
+        }
+        if (user.getStatus() != null && user.getStatus() == 0) {
+            throw new BusinessException(StatusCode.FORBIDDEN);
+        }
+        if (!passwordEncoder.matches(dto.getOldPassword(), user.getPassword())) {
+            throw new BusinessException(StatusCode.PASSWORD_ERROR);
+        }
+        if (dto.getOldPassword().equals(dto.getNewPassword())) {
+            throw new BusinessException(StatusCode.PARAM_ERROR);
+        }
+        user.setPassword(passwordEncoder.encode(dto.getNewPassword()));
+        userMapper.updateById(user);
     }
 
     private void requireAdmin(HttpServletRequest request) {

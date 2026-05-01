@@ -8,17 +8,25 @@ import com.canteen.common.exception.BusinessException;
 import com.canteen.common.result.StatusCode;
 import com.canteen.menu.dto.DishCreateDTO;
 import com.canteen.menu.entity.Dish;
+import com.canteen.menu.entity.Menu;
+import com.canteen.menu.entity.MenuDish;
 import com.canteen.menu.mapper.DishMapper;
+import com.canteen.menu.mapper.MenuDishMapper;
+import com.canteen.menu.mapper.MenuMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.math.BigDecimal;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class DishService {
 
     private final DishMapper dishMapper;
+    private final MenuDishMapper menuDishMapper;
+    private final MenuMapper menuMapper;
 
     public Dish getById(Long id) {
         Dish d = dishMapper.selectById(id);
@@ -28,11 +36,27 @@ public class DishService {
         return d;
     }
 
-    public Page<Dish> page(long page, long size, Long merchantId) {
+    public Page<Dish> page(long page, long size, Long merchantId, String name, String category, Integer status,
+                           BigDecimal minPrice, BigDecimal maxPrice) {
         LambdaQueryWrapper<Dish> q = new LambdaQueryWrapper<Dish>()
                 .orderByDesc(Dish::getId);
         if (merchantId != null) {
             q.eq(Dish::getMerchantId, merchantId);
+        }
+        if (name != null && !name.isBlank()) {
+            q.like(Dish::getName, name.trim());
+        }
+        if (category != null && !category.isBlank()) {
+            q.like(Dish::getCategory, category.trim());
+        }
+        if (status != null) {
+            q.eq(Dish::getStatus, status);
+        }
+        if (minPrice != null) {
+            q.ge(Dish::getPrice, minPrice);
+        }
+        if (maxPrice != null) {
+            q.le(Dish::getPrice, maxPrice);
         }
         return dishMapper.selectPage(new Page<>(page, size), q);
     }
@@ -57,6 +81,7 @@ public class DishService {
     @Transactional
     public void update(HttpServletRequest request, Long id, DishCreateDTO dto) {
         Dish dish = getOwnedDish(request, id);
+        ensureDishCanModify(dish.getId());
         dish.setName(dto.getName());
         dish.setDescription(dto.getDescription());
         dish.setPrice(dto.getPrice());
@@ -67,15 +92,27 @@ public class DishService {
 
     @Transactional
     public void delete(HttpServletRequest request, Long id) {
-        getOwnedDish(request, id);
+        Dish dish = getOwnedDish(request, id);
+        ensureDishCanModify(dish.getId());
         dishMapper.deleteById(id);
     }
 
     @Transactional
     public void updateStatus(HttpServletRequest request, Long id, Integer status) {
         Dish dish = getOwnedDish(request, id);
+        ensureDishCanModify(dish.getId());
         dish.setStatus(status);
         dishMapper.updateById(dish);
+    }
+
+    private void ensureDishCanModify(Long dishId) {
+        List<MenuDish> refs = menuDishMapper.selectList(new LambdaQueryWrapper<MenuDish>().eq(MenuDish::getDishId, dishId));
+        for (MenuDish ref : refs) {
+            Menu menu = menuMapper.selectById(ref.getMenuId());
+            if (menu != null && Integer.valueOf(1).equals(menu.getStatus())) {
+                throw new BusinessException(StatusCode.DISH_MENU_CONFLICT);
+            }
+        }
     }
 
     private Dish getOwnedDish(HttpServletRequest request, Long id) {

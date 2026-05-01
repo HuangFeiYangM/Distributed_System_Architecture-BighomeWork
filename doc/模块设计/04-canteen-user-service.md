@@ -373,6 +373,8 @@ function 查询当前用户(request):
 | POST | `/user/refresh` | 否（需旧Token） | `RefreshDTO` | `Result<TokenVO>` |
 | GET | `/user/me` | 是 | — | `Result<UserVO>` |
 | PUT | `/user/me` | 是 | `UserUpdateDTO` | `Result<String>` |
+| PUT | `/user/me/password` | 是 | `ChangePasswordDTO` | `Result<Void>` |
+| POST | `/user/{id}/reset-password` | 是（ADMIN） | `AdminResetPasswordDTO` | `Result<Void>` |
 | GET | `/user/list` | 是（ADMIN） | `PageParam` | `Result<Page<UserVO>>` |
 
 ### 7.2 DTO 定义
@@ -392,6 +394,21 @@ function 查询当前用户(request):
 {
   "phone": "13800138000",
   "password": "123456"
+}
+```
+
+**ChangePasswordDTO**：
+```json
+{
+  "oldPassword": "原密码",
+  "newPassword": "新密码6~20位"
+}
+```
+
+**AdminResetPasswordDTO**：
+```json
+{
+  "password": "为该用户设置的密码6~20位"
 }
 ```
 

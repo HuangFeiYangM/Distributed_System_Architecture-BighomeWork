@@ -39,6 +39,12 @@ spring:
             - Path=/api/order/**
           filters:
             - StripPrefix=1
+        - id: stat-service
+          uri: lb://canteen-order-service
+          predicates:
+            - Path=/api/stat/**
+          filters:
+            - StripPrefix=1
         - id: pickup-service
           uri: lb://canteen-pickup-service
           predicates:

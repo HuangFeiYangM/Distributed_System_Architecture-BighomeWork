@@ -1,6 +1,7 @@
 package com.canteen.pickup.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.canteen.common.exception.BusinessException;
 import com.canteen.common.result.Result;
 import com.canteen.common.result.StatusCode;
@@ -183,10 +184,20 @@ public class PickupQueueService {
                 .build();
     }
 
-    public List<CanteenWindow> windows() {
-        return windowMapper.selectList(new LambdaQueryWrapper<CanteenWindow>()
-                .eq(CanteenWindow::getStatus, 1)
-                .orderByAsc(CanteenWindow::getId));
+    public Page<CanteenWindow> windows(long page, long size, Integer status, Long merchantId, String keyword) {
+        LambdaQueryWrapper<CanteenWindow> q = new LambdaQueryWrapper<>();
+        if (status != null) {
+            q.eq(CanteenWindow::getStatus, status);
+        }
+        if (merchantId != null) {
+            q.eq(CanteenWindow::getMerchantId, merchantId);
+        }
+        if (keyword != null && !keyword.isBlank()) {
+            String key = keyword.trim();
+            q.and(w -> w.like(CanteenWindow::getName, key).or().like(CanteenWindow::getLocation, key));
+        }
+        q.orderByAsc(CanteenWindow::getId);
+        return windowMapper.selectPage(new Page<>(page, size), q);
     }
 
     @Transactional
@@ -202,6 +213,66 @@ public class PickupQueueService {
         w.setPickupPrefix(StringUtils.hasText(dto.getPickupPrefix()) ? dto.getPickupPrefix() : "A");
         w.setStatus(1);
         windowMapper.insert(w);
+        return w;
+    }
+
+    @Transactional
+    public void updateWindow(HttpServletRequest request, Long id, WindowCreateDTO dto) {
+        requireAdmin(request);
+        CanteenWindow w = requireWindow(id);
+        w.setName(dto.getName());
+        w.setLocation(dto.getLocation());
+        w.setMerchantId(dto.getMerchantId());
+        if (StringUtils.hasText(dto.getPickupPrefix())) {
+            w.setPickupPrefix(dto.getPickupPrefix());
+        }
+        windowMapper.updateById(w);
+    }
+
+    @Transactional
+    public void updateWindowStatus(HttpServletRequest request, Long id, Integer value) {
+        requireAdmin(request);
+        if (value == null || (value != 0 && value != 1)) {
+            throw new BusinessException(StatusCode.PARAM_ERROR);
+        }
+        CanteenWindow w = requireWindow(id);
+        w.setStatus(value);
+        windowMapper.updateById(w);
+    }
+
+    @Transactional
+    public void deleteWindow(HttpServletRequest request, Long id) {
+        requireAdmin(request);
+        CanteenWindow w = requireWindow(id);
+        Long active = pickupRecordMapper.selectCount(new LambdaQueryWrapper<PickupRecord>()
+                .eq(PickupRecord::getWindowId, id)
+                .in(PickupRecord::getQueueStatus, 0, 1));
+        if (active != null && active > 0) {
+            throw new BusinessException(StatusCode.DUPLICATE_KEY, "窗口有活动订单，不能删除");
+        }
+        windowMapper.deleteById(w.getId());
+    }
+
+    public List<PickupRecord> history(Long id) {
+        requireWindow(id);
+        return pickupRecordMapper.selectList(new LambdaQueryWrapper<PickupRecord>()
+                .eq(PickupRecord::getWindowId, id)
+                .orderByDesc(PickupRecord::getId)
+                .last("LIMIT 100"));
+    }
+
+    private void requireAdmin(HttpServletRequest request) {
+        String role = request.getHeader(ROLE);
+        if (!ADMIN.equals(role)) {
+            throw new BusinessException(StatusCode.FORBIDDEN);
+        }
+    }
+
+    private CanteenWindow requireWindow(Long id) {
+        CanteenWindow w = windowMapper.selectById(id);
+        if (w == null) {
+            throw new BusinessException(StatusCode.NOT_FOUND);
+        }
         return w;
     }
 

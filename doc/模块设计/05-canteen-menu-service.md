@@ -404,6 +404,9 @@ function 查询当日菜单():
 | POST | `/menu` | 是 | MERCHANT | 发布菜单 |
 | GET | `/menu/today` | 否 | — | 查询今日菜单 |
 | GET | `/menu/{id}` | 否 | — | 查询菜单详情 |
+| GET | `/menu/stock/merchant` | 是 | MERCHANT | 商家库存分页查询 |
+| GET | `/menu/stock/list` | 是 | ADMIN | 管理员全局库存分页查询 |
+| PUT | `/menu/stock/{menuDishId}` | 是 | MERCHANT/ADMIN | 库存增减改（SET/INCR/DECR） |
 
 ### 7.2 内部 API（服务间调用）
 
@@ -422,16 +425,16 @@ function 查询当日菜单():
   "saleDate": "2026-04-28",
   "startTime": "10:30",
   "endTime": "13:30",
-  "dishList": [
+  "items": [
     {
       "dishId": 1,
       "salePrice": 15.00,
-      "initialStock": 100
+      "stock": 100
     },
     {
       "dishId": 2,
       "salePrice": 12.00,
-      "initialStock": 80
+      "stock": 80
     }
   ]
 }
@@ -444,6 +447,29 @@ function 查询当日菜单():
   "quantity": 2
 }
 ```
+
+**库存操作 DTO**：
+```json
+{
+  "op": "SET",
+  "value": 120,
+  "reason": "午高峰前补货"
+}
+```
+
+### 7.4 库存接口契约补充
+
+- `GET /menu/stock/merchant`
+  - 参数：`page,size,keyword,status,menuId,dishId,saleDate`
+  - 返回：`records,total,current,size`
+- `GET /menu/stock/list`
+  - 参数：`page,size,merchantId,keyword,status,menuId,dishId,saleDate,lowStockOnly`
+  - 返回：`records,total,current,size`
+- 记录字段：`menuDishId,menuId,menuName,dishId,dishName,merchantId,merchantName,stock,sold,status,saleDate,stockThreshold`
+- `PUT /menu/stock/{menuDishId}`
+  - 操作：`SET|INCR|DECR`
+  - 规则：`SET >= sold`；`INCR > 0`；`DECR > 0` 且不得减到负数或小于已售
+  - 冲突业务码：`2002`（库存不足）/`2004`（库存状态冲突）
 
 ---
 

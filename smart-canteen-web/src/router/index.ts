@@ -5,6 +5,8 @@ import RegisterView from "../views/RegisterView.vue";
 import HomeView from "../views/HomeView.vue";
 import PickupDisplayView from "../views/PickupDisplayView.vue";
 import ProfileView from "../views/ProfileView.vue";
+import MerchantStockView from "../views/MerchantStockView.vue";
+import AdminStockView from "../views/AdminStockView.vue";
 
 const router = createRouter({
   history: createWebHistory(),
@@ -13,7 +15,9 @@ const router = createRouter({
     { path: "/register", name: "register", component: RegisterView },
     { path: "/", name: "home", component: HomeView, meta: { requiresAuth: true } },
     { path: "/display", name: "display", component: PickupDisplayView, meta: { requiresAuth: true } },
-    { path: "/profile", name: "profile", component: ProfileView, meta: { requiresAuth: true } }
+    { path: "/profile", name: "profile", component: ProfileView, meta: { requiresAuth: true } },
+    { path: "/merchant/stock", name: "merchant-stock", component: MerchantStockView, meta: { requiresAuth: true } },
+    { path: "/admin/stock", name: "admin-stock", component: AdminStockView, meta: { requiresAuth: true } }
   ]
 });
 

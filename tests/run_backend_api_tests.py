@@ -131,7 +131,7 @@ def main() -> int:
     admin = {"phone": "13800000000", "password": "admin123", "nickname": "系统管理员", "studentNo": "ADMIN001"}
     merchant = {
         "phone": "13800000001",
-        "password": "merchant123",
+        "password": "123456",
         "nickname": "1号档口老板",
         "studentNo": "MERCHANT001",
     }

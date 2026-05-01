@@ -106,6 +106,26 @@ def expect_business_code(resp: Any, wanted: List[int]) -> bool:
     code, _ = extract_code_msg(resp)
     return code in wanted
 
+def first_menu_dish_id(base: str, token: str) -> Optional[int]:
+    url = f"{base}/api/menu/today"
+    status, resp = request_json("GET", url, headers=auth_header(token))
+    print_response("GET", url, status, resp)
+    if status != 200 or not isinstance(resp, dict):
+        return None
+    data = resp.get("data")
+    if not isinstance(data, list):
+        return None
+    for menu in data:
+        if not isinstance(menu, dict):
+            continue
+        dishes = menu.get("dishes")
+        if not isinstance(dishes, list):
+            continue
+        for dish in dishes:
+            if isinstance(dish, dict) and isinstance(dish.get("id"), int):
+                return dish["id"]
+    return None
+
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="智能食堂后端补充接口测试脚本（覆盖 run_backend_api_tests.py 未测项）")
@@ -119,7 +139,7 @@ def main() -> int:
     strict = args.strict
 
     admin = {"phone": "13800000000", "password": "admin123"}
-    merchant = {"phone": "13800000001", "password": "merchant123"}
+    merchant = {"phone": "13800000001", "password": "123456"}
     user = {"phone": "13800000002", "password": "user123"}
 
     passed = 0
@@ -368,6 +388,54 @@ def main() -> int:
             record("TC-G06-empty-queue-call", ok, f"http={status}, code={code}")
 
     print_step("执行完成")
+    print(f"PASSED={passed}, FAILED={failed}")
+    print_step("库存新增接口补充测试")
+    menu_dish_id = first_menu_dish_id(base, merchant_token)
+    if menu_dish_id is None:
+        record("stock-prepare-menu-dish-id", False, "未找到今日菜单菜品，跳过库存接口测试")
+    else:
+        record("stock-prepare-menu-dish-id", True, f"menuDishId={menu_dish_id}")
+        time.sleep(pause)
+
+        url = f"{base}/api/menu/stock/merchant?page=1&size=10"
+        status, resp = request_json("GET", url, headers=auth_header(merchant_token))
+        print_response("GET", url, status, resp)
+        data = extract_data(resp)
+        ok = isinstance(data, dict) and isinstance(data.get("records"), list)
+        record("stock-merchant-query", ok)
+        time.sleep(pause)
+
+        url = f"{base}/api/menu/stock/list?page=1&size=10"
+        status, resp = request_json("GET", url, headers=auth_header(admin_token))
+        print_response("GET", url, status, resp)
+        data = extract_data(resp)
+        ok = isinstance(data, dict) and isinstance(data.get("records"), list)
+        record("stock-admin-query", ok)
+        time.sleep(pause)
+
+        url = f"{base}/api/menu/stock/{menu_dish_id}"
+        status, resp = request_json(
+            "PUT",
+            url,
+            headers=auth_header(merchant_token),
+            json_body={"op": "INCR", "value": 1, "reason": "additional-tests"},
+        )
+        print_response("PUT", url, status, resp)
+        code, _ = extract_code_msg(resp)
+        record("stock-merchant-update", (status == 200) and (code == 200))
+        time.sleep(pause)
+
+        status, resp = request_json(
+            "PUT",
+            url,
+            headers=auth_header(merchant_token),
+            json_body={"op": "DECR", "value": 9999999, "reason": "conflict"},
+        )
+        print_response("PUT", url, status, resp)
+        code, _ = extract_code_msg(resp)
+        record("stock-decr-conflict", code in (2002, 2004), f"http={status}, code={code}")
+
+    print_step("执行完成（含库存补充）")
     print(f"PASSED={passed}, FAILED={failed}")
     if strict and failed > 0:
         print("严格模式开启：存在失败用例，脚本返回 1。")

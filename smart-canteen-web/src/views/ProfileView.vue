@@ -28,6 +28,24 @@
           <el-button type="primary" :loading="saving" @click="save">保存资料</el-button>
         </el-form-item>
       </el-form>
+
+      <el-divider content-position="left">修改密码</el-divider>
+      <el-form label-width="90px">
+        <el-form-item label="当前密码">
+          <el-input v-model="pwdForm.oldPassword" type="password" show-password placeholder="请输入当前密码" />
+        </el-form-item>
+        <el-form-item label="新密码">
+          <el-input
+            v-model="pwdForm.newPassword"
+            type="password"
+            show-password
+            placeholder="6～20 位，与注册一致"
+          />
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" plain :loading="pwdSaving" @click="savePassword">确认修改密码</el-button>
+        </el-form-item>
+      </el-form>
     </el-card>
   </div>
 </template>
@@ -36,7 +54,13 @@
 import { onMounted, reactive, ref } from "vue";
 import { useRouter } from "vue-router";
 import { ElMessage } from "element-plus";
-import { meApi, refreshTokenApi, updateMeApi, type UserProfile } from "../api/user";
+import {
+  changePasswordApi,
+  meApi,
+  refreshTokenApi,
+  updateMeApi,
+  type UserProfile
+} from "../api/user";
 import { useAuthStore } from "../stores/auth";
 
 const router = useRouter();
@@ -48,6 +72,12 @@ const refreshing = ref(false);
 const form = reactive({
   nickname: ""
 });
+
+const pwdForm = reactive({
+  oldPassword: "",
+  newPassword: ""
+});
+const pwdSaving = ref(false);
 
 const roleLabel = (role: number) => {
   if (role === 2) return "管理员";
@@ -71,6 +101,30 @@ const save = async () => {
     await loadProfile();
   } finally {
     saving.value = false;
+  }
+};
+
+const savePassword = async () => {
+  if (!pwdForm.oldPassword.trim()) {
+    ElMessage.warning("请输入当前密码");
+    return;
+  }
+  const np = pwdForm.newPassword.trim();
+  if (np.length < 6 || np.length > 20) {
+    ElMessage.warning("新密码长度需为 6～20 位");
+    return;
+  }
+  pwdSaving.value = true;
+  try {
+    await changePasswordApi({
+      oldPassword: pwdForm.oldPassword,
+      newPassword: np
+    });
+    ElMessage.success("密码已更新");
+    pwdForm.oldPassword = "";
+    pwdForm.newPassword = "";
+  } finally {
+    pwdSaving.value = false;
   }
 };
 

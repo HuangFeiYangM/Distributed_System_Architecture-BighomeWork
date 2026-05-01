@@ -3,9 +3,12 @@ C:\Users\Huang_FeiYang\Desktop\testarea\Distributed_System_Architecture\smart-ca
 C:\Users\Huang_FeiYang\Desktop\testarea\Distributed_System_Architecture\smart-canteen\canteen-menu-service\src\main\java\com\canteen\menu\config\MybatisPlusConfig.java
 C:\Users\Huang_FeiYang\Desktop\testarea\Distributed_System_Architecture\smart-canteen\canteen-menu-service\src\main\java\com\canteen\menu\controller\DishController.java
 C:\Users\Huang_FeiYang\Desktop\testarea\Distributed_System_Architecture\smart-canteen\canteen-menu-service\src\main\java\com\canteen\menu\controller\MenuBoardController.java
+C:\Users\Huang_FeiYang\Desktop\testarea\Distributed_System_Architecture\smart-canteen\canteen-menu-service\src\main\java\com\canteen\menu\dto\AdminMenuDishUpdateDTO.java
+C:\Users\Huang_FeiYang\Desktop\testarea\Distributed_System_Architecture\smart-canteen\canteen-menu-service\src\main\java\com\canteen\menu\dto\AdminMenuUpdateDTO.java
 C:\Users\Huang_FeiYang\Desktop\testarea\Distributed_System_Architecture\smart-canteen\canteen-menu-service\src\main\java\com\canteen\menu\dto\DishCreateDTO.java
 C:\Users\Huang_FeiYang\Desktop\testarea\Distributed_System_Architecture\smart-canteen\canteen-menu-service\src\main\java\com\canteen\menu\dto\MenuPublishDTO.java
 C:\Users\Huang_FeiYang\Desktop\testarea\Distributed_System_Architecture\smart-canteen\canteen-menu-service\src\main\java\com\canteen\menu\dto\StockOpDTO.java
+C:\Users\Huang_FeiYang\Desktop\testarea\Distributed_System_Architecture\smart-canteen\canteen-menu-service\src\main\java\com\canteen\menu\dto\StockUpdateDTO.java
 C:\Users\Huang_FeiYang\Desktop\testarea\Distributed_System_Architecture\smart-canteen\canteen-menu-service\src\main\java\com\canteen\menu\entity\Dish.java
 C:\Users\Huang_FeiYang\Desktop\testarea\Distributed_System_Architecture\smart-canteen\canteen-menu-service\src\main\java\com\canteen\menu\entity\Menu.java
 C:\Users\Huang_FeiYang\Desktop\testarea\Distributed_System_Architecture\smart-canteen\canteen-menu-service\src\main\java\com\canteen\menu\entity\MenuDish.java
@@ -17,3 +20,4 @@ C:\Users\Huang_FeiYang\Desktop\testarea\Distributed_System_Architecture\smart-ca
 C:\Users\Huang_FeiYang\Desktop\testarea\Distributed_System_Architecture\smart-canteen\canteen-menu-service\src\main\java\com\canteen\menu\service\DishService.java
 C:\Users\Huang_FeiYang\Desktop\testarea\Distributed_System_Architecture\smart-canteen\canteen-menu-service\src\main\java\com\canteen\menu\vo\MenuDetailVO.java
 C:\Users\Huang_FeiYang\Desktop\testarea\Distributed_System_Architecture\smart-canteen\canteen-menu-service\src\main\java\com\canteen\menu\vo\MenuDishDetailVO.java
+C:\Users\Huang_FeiYang\Desktop\testarea\Distributed_System_Architecture\smart-canteen\canteen-menu-service\src\main\java\com\canteen\menu\vo\StockItemVO.java

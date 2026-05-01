@@ -213,6 +213,43 @@ npm run dev
 - 管理员端（P0/P1）：窗口创建、窗口列表、用户列表
 - 大屏端（P2）：窗口大屏数据、WebSocket 实时消息展示
 
+## API 补齐清单（2026-04）
+
+### P0 已补齐
+- `GET /api/order/merchant`：商家订单分页查询，支持 `page,size,status,windowId,keyword,dateFrom,dateTo`
+- `GET /api/menu/today`：返回增强字段 `merchantId,merchantName`（并保留菜单和菜品字段）
+- `PUT /api/pickup/window/{id}`、`PUT /api/pickup/window/{id}/status`、`DELETE /api/pickup/window/{id}`
+- `PUT /api/user/{id}/status`、`DELETE /api/user/{id}`
+
+### P1 已补齐
+- `GET /api/menu/list`：支持 `page,size,name,merchantId,saleDate,status,startDate,endDate`
+- `GET /api/menu/{id}`：增强返回 `merchantId,merchantName,windowId,windowName,createTime,updateTime`
+- `GET /api/menu/stock/merchant`：商家库存分页查询，支持 `page,size,keyword,status,menuId,dishId,saleDate`
+- `GET /api/menu/stock/list`：管理员全局库存分页查询，支持 `page,size,merchantId,keyword,status,menuId,dishId,saleDate,lowStockOnly`
+- `PUT /api/menu/stock/{menuDishId}`：库存操作接口，`op=SET|INCR|DECR`，请求体示例：`{"op":"DECR","value":2,"reason":"备餐损耗"}`
+- `GET /api/dish/list`：支持 `page,size,merchantId,name,category,status,minPrice,maxPrice`
+- `GET /api/pickup/windows`：支持 `page,size,status,merchantId,keyword`
+- `GET /api/user/list`：支持 `page,size,role,status,phone,nickname,studentNo`
+- `GET /api/order/list`：管理员全局订单，支持 `page,size,status,merchantId,windowId,userId,keyword,dateFrom,dateTo`
+- 菜品接口业务约束：`PUT /api/dish/{id}`、`PUT /api/dish/{id}/status`、`DELETE /api/dish/{id}` 在“被生效菜单引用”时返回业务码 `3008`
+
+### P2 已补齐
+- `POST /api/order/{id}/remark`
+- `POST /api/order/batch/status`
+- `GET /api/stat/merchant/dashboard`
+- `GET /api/stat/admin/dashboard`
+- `GET /api/pickup/window/{id}/history`
+- `POST /api/user/{id}/reset-password`：管理员重置指定用户密码，请求体 `{ "password": "新密码" }`（6–20 位，与注册一致）
+- `PUT /api/user/me/password`：当前登录用户修改自己的密码，请求体 `{ "oldPassword": "原密码", "newPassword": "新密码" }`（新密码 6–20 位）
+
+### 统一规范
+- 分页返回结构：`records,total,current,size`
+- 关键词参数：`keyword`
+- 时间范围参数：`dateFrom,dateTo`（支持 ISO 或 `yyyy-MM-dd`）
+- 常用错误语义：`403` 越权、`404` 资源不存在、库存冲突返回业务码（如 `2002/2004`）
+- 业务码：`3008` 表示“菜品被生效菜单引用不可修改”
+- 库存业务码：`2002` 库存不足、`2004` 库存状态冲突（例如 `SET` 小于已售）
+
 ### 大作业文档要求映射（前端视角）
 
 | 文档要求模块 | 对应前端功能 | 说明 |

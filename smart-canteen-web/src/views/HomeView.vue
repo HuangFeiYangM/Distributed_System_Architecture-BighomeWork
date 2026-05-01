@@ -8,6 +8,7 @@
         </div>
         <el-space wrap>
           <el-button :loading="loading" @click="loadAll">刷新数据</el-button>
+          <el-button v-if="isAdmin" type="primary" plain @click="goAdminStock">全局库存页</el-button>
           <el-button type="primary" plain @click="goDisplay">取餐大屏</el-button>
           <el-button type="primary" plain @click="goProfile">个人中心</el-button>
           <el-button type="danger" plain @click="logout">退出登录</el-button>
@@ -47,16 +48,25 @@
 
     <el-card class="nav-card">
       <div class="role-nav">
-        <el-button
-          v-for="item in roleNavItems"
-          :key="item.key"
-          :type="activeSection === item.key ? 'primary' : 'default'"
-          plain
-          class="nav-item-btn"
-          @click="activeSection = item.key"
-        >
-          {{ item.label }}
-        </el-button>
+        <template v-for="item in roleNavItems" :key="item.key">
+          <el-button
+            :type="activeSection === item.key ? 'primary' : 'default'"
+            plain
+            class="nav-item-btn"
+            @click="activeSection = item.key"
+          >
+            {{ item.label }}
+          </el-button>
+          <el-button
+            v-if="isMerchant && item.key === sectionIdMap.merchantStock"
+            type="primary"
+            plain
+            class="nav-item-btn"
+            @click="goMerchantStock"
+          >
+            库存页
+          </el-button>
+        </template>
       </div>
     </el-card>
 
@@ -73,6 +83,9 @@
           <el-empty v-if="filteredMenuDishes.length === 0" description="当前无可用菜单" />
           <el-table v-else :data="filteredMenuDishes" size="small">
             <el-table-column prop="dishName" label="菜品" min-width="120" />
+            <el-table-column label="商家" min-width="120">
+              <template #default="{ row }">{{ menuMerchantNameByMenuDishId(row.id) }}</template>
+            </el-table-column>
             <el-table-column prop="salePrice" label="价格" width="90">
               <template #default="{ row }">¥{{ row.salePrice }}</template>
             </el-table-column>
@@ -135,6 +148,27 @@
         </div>
       </template>
       <el-input v-model="userOrderKeyword" placeholder="按订单号/取餐码/叫号码查询" class="query-input" />
+      <el-space wrap class="query-row">
+        <el-select v-model="userAdvancedStatus" placeholder="状态筛选" clearable class="query-input-short">
+          <el-option :value="0" label="已下单" />
+          <el-option :value="1" label="已接单" />
+          <el-option :value="2" label="制作中" />
+          <el-option :value="3" label="待取餐" />
+          <el-option :value="4" label="已取餐" />
+          <el-option :value="5" label="已取消" />
+        </el-select>
+        <el-date-picker
+          v-model="userOrderDateRange"
+          type="datetimerange"
+          value-format="YYYY-MM-DDTHH:mm:ss"
+          start-placeholder="开始时间"
+          end-placeholder="结束时间"
+          range-separator="至"
+        />
+        <el-input-number v-model="userMinAmount" :min="0" :step="1" placeholder="最小金额" />
+        <el-input-number v-model="userMaxAmount" :min="0" :step="1" placeholder="最大金额" />
+        <el-button @click="resetUserOrderFilters">重置筛选</el-button>
+      </el-space>
       <el-table :data="filteredUserOrders" size="small">
         <el-table-column prop="id" label="订单ID" width="90" />
         <el-table-column prop="orderNo" label="订单号" min-width="160" />
@@ -169,6 +203,27 @@
               </div>
             </template>
             <el-input v-model="merchantOrderKeyword" placeholder="按订单号/取餐码/订单ID查询" class="query-input" />
+            <el-space wrap class="query-row">
+              <el-select v-model="merchantOrderStatus" placeholder="状态筛选" clearable class="query-input-short">
+                <el-option :value="0" label="已下单" />
+                <el-option :value="1" label="已接单" />
+                <el-option :value="2" label="制作中" />
+                <el-option :value="3" label="待取餐" />
+                <el-option :value="4" label="已取餐" />
+                <el-option :value="5" label="已取消" />
+              </el-select>
+              <el-date-picker
+                v-model="merchantOrderDateRange"
+                type="datetimerange"
+                value-format="YYYY-MM-DDTHH:mm:ss"
+                start-placeholder="开始时间"
+                end-placeholder="结束时间"
+                range-separator="至"
+              />
+              <el-input-number v-model="merchantMinAmount" :min="0" :step="1" placeholder="最小金额" />
+              <el-input-number v-model="merchantMaxAmount" :min="0" :step="1" placeholder="最大金额" />
+              <el-button @click="resetMerchantOrderFilters">重置筛选</el-button>
+            </el-space>
             <el-table :data="filteredMerchantOrders" size="small">
               <el-table-column prop="id" label="订单ID" width="90" />
               <el-table-column prop="orderNo" label="订单号" min-width="160" />
@@ -189,6 +244,18 @@
                 </template>
               </el-table-column>
             </el-table>
+            <div class="pagination-wrap">
+              <el-pagination
+                background
+                layout="total, sizes, prev, pager, next"
+                :total="merchantOrderTotal"
+                :current-page="merchantOrderPage"
+                :page-size="merchantOrderSize"
+                :page-sizes="[10, 20, 50]"
+                @current-change="onMerchantOrderPageChange"
+                @size-change="onMerchantOrderSizeChange"
+              />
+            </div>
           </el-card>
         </el-col>
 
@@ -421,6 +488,14 @@
               </div>
             </template>
             <el-input v-model="windowKeyword" placeholder="按窗口名/位置/商家ID查询" class="query-input" />
+            <el-space wrap class="query-row">
+              <el-select v-model="adminWindowStatus" placeholder="状态筛选" clearable class="query-input-short">
+                <el-option :value="1" label="启用" />
+                <el-option :value="0" label="停用" />
+              </el-select>
+              <el-input-number v-model="adminWindowMerchantId" :min="1" :step="1" placeholder="商家ID" />
+              <el-button @click="resetAdminWindowFilters">重置筛选</el-button>
+            </el-space>
             <el-table :data="filteredWindows" size="small">
               <el-table-column prop="id" label="ID" width="70" />
               <el-table-column prop="name" label="窗口名称" min-width="120" />
@@ -430,7 +505,29 @@
               <el-table-column prop="status" label="状态" width="90">
                 <template #default="{ row }">{{ row.status === 1 ? "启用" : "停用" }}</template>
               </el-table-column>
+              <el-table-column label="操作" min-width="220">
+                <template #default="{ row }">
+                  <el-space wrap>
+                    <el-button size="small" :type="row.status === 1 ? 'warning' : 'success'" @click="toggleWindowStatus(row)">
+                      {{ row.status === 1 ? "停用" : "启用" }}
+                    </el-button>
+                    <el-button size="small" type="danger" @click="removeWindow(row)">删除</el-button>
+                  </el-space>
+                </template>
+              </el-table-column>
             </el-table>
+            <div class="pagination-wrap">
+              <el-pagination
+                background
+                layout="total, sizes, prev, pager, next"
+                :total="adminWindowTotal"
+                :current-page="adminWindowPage"
+                :page-size="adminWindowSize"
+                :page-sizes="[5, 10, 20, 50]"
+                @current-change="onAdminWindowPageChange"
+                @size-change="onAdminWindowSizeChange"
+              />
+            </div>
           </el-card>
         </el-col>
         <el-col v-if="activeSection === sectionIdMap.adminUsers" :span="24">
@@ -442,6 +539,18 @@
               </div>
             </template>
             <el-input v-model="userKeyword" placeholder="按用户ID/手机号/昵称查询" class="query-input" />
+            <el-space wrap class="query-row">
+              <el-select v-model="adminUserRole" placeholder="角色筛选" clearable class="query-input-short">
+                <el-option :value="0" label="普通用户" />
+                <el-option :value="1" label="商家" />
+                <el-option :value="2" label="管理员" />
+              </el-select>
+              <el-select v-model="adminUserStatus" placeholder="状态筛选" clearable class="query-input-short">
+                <el-option :value="1" label="启用" />
+                <el-option :value="0" label="停用" />
+              </el-select>
+              <el-button @click="resetAdminUserFilters">重置筛选</el-button>
+            </el-space>
             <el-table :data="filteredUsers" size="small">
               <el-table-column prop="id" label="ID" width="70" />
               <el-table-column prop="phone" label="手机号" width="130" />
@@ -451,6 +560,17 @@
               </el-table-column>
               <el-table-column prop="status" label="状态" width="80">
                 <template #default="{ row }">{{ row.status === 1 ? "启用" : "停用" }}</template>
+              </el-table-column>
+              <el-table-column label="操作" min-width="280">
+                <template #default="{ row }">
+                  <el-space wrap>
+                    <el-button size="small" :type="row.status === 1 ? 'warning' : 'success'" @click="toggleUserStatus(row)">
+                      {{ row.status === 1 ? "停用" : "启用" }}
+                    </el-button>
+                    <el-button size="small" @click="resetUserPassword(row)">重置密码</el-button>
+                    <el-button size="small" type="danger" @click="removeUser(row)">删除</el-button>
+                  </el-space>
+                </template>
               </el-table-column>
             </el-table>
             <div class="pagination-wrap">
@@ -472,24 +592,91 @@
           <el-card :id="sectionIdMap.adminMenuDetail">
             <template #header>
               <div class="section-head">
-                <span>菜单详情查询</span>
-                <small>按菜单ID/菜单名称查询</small>
+                <span>菜单管理</span>
+                <small>管理员可编辑/启停/删除菜单与菜单项</small>
               </div>
             </template>
-            <el-input v-model="menuKeyword" placeholder="按菜单ID/菜单名称查询" class="query-input" />
+            <el-space wrap class="query-row">
+              <el-input v-model="menuKeyword" placeholder="按菜单ID/菜单名称查询" class="query-input-short" />
+              <el-input-number v-model="adminMenuMerchantId" :min="1" :step="1" placeholder="商家ID（可选）" />
+              <el-select v-model="adminMenuStatus" clearable placeholder="状态" class="query-input-short">
+                <el-option :value="1" label="生效" />
+                <el-option :value="0" label="失效" />
+              </el-select>
+              <el-date-picker v-model="adminMenuSaleDate" type="date" value-format="YYYY-MM-DD" placeholder="售卖日期" />
+              <el-button @click="resetAdminMenuFilters">重置筛选</el-button>
+              <el-button type="primary" :loading="adminMenuPageLoading" @click="loadAll">查询</el-button>
+            </el-space>
+
             <el-empty v-if="filteredAdminMenus.length === 0" description="当前无可查询菜单" />
-            <el-table v-else :data="filteredAdminMenus" size="small">
-              <el-table-column prop="id" label="菜单ID" width="100" />
-              <el-table-column prop="name" label="菜单名称" min-width="150" />
-              <el-table-column prop="saleDate" label="日期" width="120" />
-              <el-table-column prop="startTime" label="开始" width="110" />
-              <el-table-column prop="endTime" label="结束" width="110" />
-              <el-table-column label="操作" width="120">
-                <template #default="{ row }">
-                  <el-button link type="primary" :loading="adminMenuLoading" @click="openAdminMenuDetail(row.id)">查看详情</el-button>
-                </template>
-              </el-table-column>
-            </el-table>
+            <template v-else>
+              <el-space wrap class="query-row">
+                <el-button
+                  type="success"
+                  plain
+                  :disabled="adminMenuSelectedIds.length === 0"
+                  :loading="adminMenuBatchLoading"
+                  @click="batchUpdateAdminMenuStatus(1)"
+                >
+                  批量启用
+                </el-button>
+                <el-button
+                  type="warning"
+                  plain
+                  :disabled="adminMenuSelectedIds.length === 0"
+                  :loading="adminMenuBatchLoading"
+                  @click="batchUpdateAdminMenuStatus(0)"
+                >
+                  批量停用
+                </el-button>
+                <el-button
+                  type="danger"
+                  plain
+                  :disabled="adminMenuSelectedIds.length === 0"
+                  :loading="adminMenuBatchLoading"
+                  @click="batchDeleteAdminMenus"
+                >
+                  批量删除
+                </el-button>
+                <small style="color: #64748b">已选：{{ adminMenuSelectedIds.length }} 个</small>
+              </el-space>
+              <el-table :data="filteredAdminMenus" size="small" @selection-change="onAdminMenuSelectionChange">
+                <el-table-column type="selection" width="48" />
+                <el-table-column prop="id" label="菜单ID" width="100" />
+                <el-table-column prop="name" label="菜单名称" min-width="150" />
+                <el-table-column prop="saleDate" label="日期" width="120" />
+                <el-table-column prop="startTime" label="开始" width="110" />
+                <el-table-column prop="endTime" label="结束" width="110" />
+                <el-table-column prop="status" label="状态" width="90">
+                  <template #default="{ row }">{{ row.status === 1 ? "生效" : "失效" }}</template>
+                </el-table-column>
+                <el-table-column label="操作" min-width="320">
+                  <template #default="{ row }">
+                    <el-space wrap>
+                      <el-button link type="primary" :loading="adminMenuLoading" @click="openAdminMenuDetail(row.id)">详情</el-button>
+                      <el-button link type="warning" @click="openAdminMenuEdit(row)">编辑</el-button>
+                      <el-button link :type="row.status === 1 ? 'danger' : 'success'" @click="toggleAdminMenuStatus(row)">
+                        {{ row.status === 1 ? "停用" : "启用" }}
+                      </el-button>
+                      <el-button link type="danger" @click="deleteAdminMenu(row)">删除</el-button>
+                    </el-space>
+                  </template>
+                </el-table-column>
+              </el-table>
+            </template>
+
+            <div class="pagination-wrap">
+              <el-pagination
+                background
+                layout="total, sizes, prev, pager, next"
+                :total="adminMenuTotal"
+                :current-page="adminMenuPage"
+                :page-size="adminMenuSize"
+                :page-sizes="[5, 10, 20, 50]"
+                @current-change="onAdminMenuPageChange"
+                @size-change="onAdminMenuSizeChange"
+              />
+            </div>
           </el-card>
         </el-col>
 
@@ -497,14 +684,61 @@
           <el-card :id="sectionIdMap.adminDishDetail">
             <template #header>
               <div class="section-head">
-                <span>菜品详情查询</span>
-                <small>按菜品ID查询</small>
+                <span>菜品查询管理</span>
+                <small>默认展示全部菜品，支持多条件筛选</small>
               </div>
             </template>
-            <el-space wrap>
-              <el-input-number v-model="adminDishQueryId" :min="1" :step="1" placeholder="输入菜品ID" />
-              <el-button type="primary" :loading="adminDishQueryLoading" @click="queryAdminDishDetail">查询菜品</el-button>
+            <el-space wrap class="query-row">
+              <el-input-number v-model="adminDishQueryId" :min="1" :step="1" placeholder="菜品ID（精确）" />
+              <el-input v-model="adminDishNameKeyword" placeholder="菜品名称关键字" class="query-input-short" />
+              <el-input v-model="adminDishCategoryKeyword" placeholder="分类（如主食）" class="query-input-short" />
+              <el-input-number v-model="adminDishMerchantId" :min="1" :step="1" placeholder="商家ID" />
+              <el-select v-model="adminDishStatus" clearable placeholder="状态" class="query-input-short">
+                <el-option :value="1" label="上架" />
+                <el-option :value="0" label="下架" />
+              </el-select>
+              <el-input-number v-model="adminDishMinPrice" :min="0" :step="1" placeholder="最低价" />
+              <el-input-number v-model="adminDishMaxPrice" :min="0" :step="1" placeholder="最高价" />
+              <el-select v-model="adminDishSortType" placeholder="排序方式" class="query-input-short">
+                <el-option label="创建时间：最新优先" value="createTimeDesc" />
+                <el-option label="创建时间：最早优先" value="createTimeAsc" />
+                <el-option label="价格：从低到高" value="priceAsc" />
+                <el-option label="价格：从高到低" value="priceDesc" />
+              </el-select>
+              <el-button @click="resetAdminDishFilters">重置筛选</el-button>
+              <el-button type="primary" :loading="adminDishPageLoading" @click="loadAdminDishPage(true)">查询</el-button>
             </el-space>
+
+            <el-table :data="sortedAdminDishList" size="small" v-loading="adminDishPageLoading">
+              <el-table-column prop="id" label="菜品ID" width="90" />
+              <el-table-column prop="merchantId" label="商家ID" width="90" />
+              <el-table-column prop="name" label="菜品名称" min-width="130" />
+              <el-table-column prop="category" label="分类" width="100" />
+              <el-table-column prop="price" label="价格" width="90">
+                <template #default="{ row }">¥{{ row.price }}</template>
+              </el-table-column>
+              <el-table-column prop="status" label="状态" width="80">
+                <template #default="{ row }">{{ row.status === 1 ? "上架" : "下架" }}</template>
+              </el-table-column>
+              <el-table-column label="操作" width="90">
+                <template #default="{ row }">
+                  <el-button link type="primary" :loading="adminDishQueryLoading" @click="openAdminDishDetail(row.id)">详情</el-button>
+                </template>
+              </el-table-column>
+            </el-table>
+            <div class="pagination-wrap">
+              <el-pagination
+                background
+                layout="total, sizes, prev, pager, next"
+                :total="adminDishTotal"
+                :current-page="adminDishPage"
+                :page-size="adminDishSize"
+                :page-sizes="[10, 20, 50]"
+                @current-change="onAdminDishPageChange"
+                @size-change="onAdminDishSizeChange"
+              />
+            </div>
+
             <el-descriptions v-if="adminDishDetail" :column="2" border class="search-result">
               <el-descriptions-item label="菜品ID">{{ adminDishDetail.id }}</el-descriptions-item>
               <el-descriptions-item label="商家ID">{{ adminDishDetail.merchantId }}</el-descriptions-item>
@@ -565,26 +799,105 @@
         <el-table-column prop="salePrice" label="售价" width="90" />
         <el-table-column prop="stock" label="库存" width="90" />
         <el-table-column prop="sold" label="已售" width="90" />
+        <el-table-column prop="status" label="状态" width="90">
+          <template #default="{ row }">{{ row.status === 1 ? "可售" : "停售" }}</template>
+        </el-table-column>
+        <el-table-column label="操作" min-width="220">
+          <template #default="{ row }">
+            <el-space wrap>
+              <el-button size="small" @click="openAdminMenuDishEdit(row)">改售价/上下架</el-button>
+              <el-button size="small" type="primary" plain @click="openAdminStockOp(row)">改库存</el-button>
+            </el-space>
+          </template>
+        </el-table-column>
       </el-table>
+    </el-dialog>
+
+    <el-dialog v-model="adminMenuEditVisible" title="编辑菜单（管理员）" width="520px">
+      <el-form label-width="90px">
+        <el-form-item label="菜单名称">
+          <el-input v-model="adminMenuEditForm.name" />
+        </el-form-item>
+        <el-form-item label="售卖日期">
+          <el-date-picker v-model="adminMenuEditForm.saleDate" type="date" value-format="YYYY-MM-DD" />
+        </el-form-item>
+        <el-form-item label="开始时间">
+          <el-time-picker v-model="adminMenuEditForm.startTime" value-format="HH:mm:ss" />
+        </el-form-item>
+        <el-form-item label="结束时间">
+          <el-time-picker v-model="adminMenuEditForm.endTime" value-format="HH:mm:ss" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="adminMenuEditVisible = false">取消</el-button>
+        <el-button type="primary" :loading="adminMenuEditSaving" @click="submitAdminMenuEdit">保存</el-button>
+      </template>
+    </el-dialog>
+
+    <el-dialog v-model="adminMenuDishEditVisible" title="编辑菜单项（管理员）" width="520px">
+      <el-form label-width="90px">
+        <el-form-item label="菜单菜品ID">
+          <el-tag>{{ adminMenuDishEditForm.menuDishId }}</el-tag>
+        </el-form-item>
+        <el-form-item label="售价">
+          <el-input-number v-model="adminMenuDishEditForm.salePrice" :min="0.01" :step="0.5" />
+        </el-form-item>
+        <el-form-item label="状态">
+          <el-select v-model="adminMenuDishEditForm.status" style="width: 100%">
+            <el-option :value="1" label="可售" />
+            <el-option :value="0" label="停售" />
+          </el-select>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="adminMenuDishEditVisible = false">取消</el-button>
+        <el-button type="primary" :loading="adminMenuDishEditSaving" @click="submitAdminMenuDishEdit">保存</el-button>
+      </template>
+    </el-dialog>
+
+    <el-dialog v-model="adminStockOpVisible" title="库存操作（管理员）" width="420px">
+      <el-form label-width="90px">
+        <el-form-item label="操作类型">
+          <el-tag>{{ adminStockOpForm.op }}</el-tag>
+        </el-form-item>
+        <el-form-item label="数值">
+          <el-input-number v-model="adminStockOpForm.value" :min="0" :step="1" />
+        </el-form-item>
+        <el-form-item label="原因">
+          <el-input v-model="adminStockOpForm.reason" placeholder="可选" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="adminStockOpVisible = false">取消</el-button>
+        <el-button type="primary" :loading="adminStockOpSaving" @click="submitAdminStockOp">确认</el-button>
+      </template>
     </el-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from "vue";
-import { ElMessage } from "element-plus";
+import { ElMessage, ElMessageBox } from "element-plus";
 import { useRouter } from "vue-router";
 import {
+  adminDeleteMenuApi,
+  adminUpdateMenuApi,
+  adminUpdateMenuDishApi,
+  adminUpdateMenuStatusApi,
   getMenuDetailApi,
   getMenuDishDetailApi,
+  getMenuListApi,
   getTodayMenusApi,
   publishMenuApi,
+  updateStockApi,
   type MenuDish,
   type MenuDishDetail,
-  type TodayMenu
+  type TodayMenu,
+  type StockUpdatePayload
 } from "../api/menu";
 import {
   cancelOrderApi,
+  getMerchantOrdersApi,
   getMyOrdersApi,
   createOrderApi,
   updateOrderStatusApi,
@@ -594,19 +907,30 @@ import {
   type OrderRecord
 } from "../api/order";
 import {
+  deleteWindowApi,
   getWindowsApi,
+  getWindowsPageApi,
   getWindowQueueApi,
   callNextApi,
+  updateWindowStatusApi,
   verifyPickupApi,
   createWindowApi,
   type PickupWindow
 } from "../api/pickup";
-import { getUserListApi, type UserRecord } from "../api/user";
+import {
+  deleteUserApi,
+  getUserListApi,
+  queryUserListApi,
+  resetUserPasswordApi,
+  type UserRecord,
+  updateUserStatusApi
+} from "../api/user";
 import {
   createDishApi,
   deleteDishApi,
   getDishDetailApi,
   getDishListApi,
+  getDishPageApi,
   updateDishApi,
   updateDishStatusApi,
   type Dish
@@ -621,6 +945,7 @@ const windows = ref<PickupWindow[]>([]);
 const orders = ref<OrderRecord[]>([]);
 const merchantOrders = ref<OrderRecord[]>([]);
 const dishes = ref<MenuDish[]>([]);
+const userTodayMenus = ref<TodayMenu[]>([]);
 const merchantTodayMenus = ref<TodayMenu[]>([]);
 const adminMenus = ref<TodayMenu[]>([]);
 const lowStockDishes = ref<MenuDish[]>([]);
@@ -645,9 +970,59 @@ const publishingMenu = ref(false);
 const adminMenuDetailVisible = ref(false);
 const adminMenuDetail = ref<TodayMenu | null>(null);
 const adminMenuLoading = ref(false);
+const adminMenuPageLoading = ref(false);
+const adminMenuPage = ref(1);
+const adminMenuSize = ref(10);
+const adminMenuTotal = ref(0);
+const adminMenuMerchantId = ref<number | null>(null);
+const adminMenuStatus = ref<number | undefined>(undefined);
+const adminMenuSaleDate = ref<string>("");
+
+const adminMenuEditVisible = ref(false);
+const adminMenuEditSaving = ref(false);
+const adminMenuEditId = ref<number | null>(null);
+const adminMenuEditForm = reactive({
+  name: "",
+  saleDate: "",
+  startTime: "",
+  endTime: ""
+});
+
+const adminMenuDishEditVisible = ref(false);
+const adminMenuDishEditSaving = ref(false);
+const adminMenuDishEditForm = reactive({
+  menuDishId: 0,
+  dishId: 0,
+  salePrice: 0,
+  status: 1
+});
+
+const adminStockOpVisible = ref(false);
+const adminStockOpSaving = ref(false);
+const adminStockMenuDishId = ref<number | null>(null);
+const adminStockOpForm = reactive<StockUpdatePayload>({
+  op: "INCR",
+  value: 1,
+  reason: ""
+});
+
+const adminMenuSelectedIds = ref<number[]>([]);
+const adminMenuBatchLoading = ref(false);
 const adminDishQueryId = ref<number | null>(null);
 const adminDishQueryLoading = ref(false);
+const adminDishPageLoading = ref(false);
 const adminDishDetail = ref<Dish | null>(null);
+const adminDishList = ref<Dish[]>([]);
+const adminDishPage = ref(1);
+const adminDishSize = ref(10);
+const adminDishTotal = ref(0);
+const adminDishNameKeyword = ref("");
+const adminDishCategoryKeyword = ref("");
+const adminDishMerchantId = ref<number | null>(null);
+const adminDishStatus = ref<number | undefined>(undefined);
+const adminDishMinPrice = ref<number | null>(null);
+const adminDishMaxPrice = ref<number | null>(null);
+const adminDishSortType = ref<"createTimeDesc" | "createTimeAsc" | "priceAsc" | "priceDesc">("createTimeDesc");
 const lowStockThreshold = ref(10);
 const userMenuKeyword = ref("");
 const userOrderKeyword = ref("");
@@ -657,10 +1032,28 @@ const dishKeyword = ref("");
 const windowKeyword = ref("");
 const userKeyword = ref("");
 const menuKeyword = ref("");
+const merchantOrderPage = ref(1);
+const merchantOrderSize = ref(20);
+const merchantOrderTotal = ref(0);
+const merchantOrderStatus = ref<number | undefined>(undefined);
+const merchantOrderDateRange = ref<[string, string] | null>(null);
+const merchantMinAmount = ref<number | null>(null);
+const merchantMaxAmount = ref<number | null>(null);
+const adminWindowPage = ref(1);
+const adminWindowSize = ref(10);
+const adminWindowTotal = ref(0);
+const adminWindowStatus = ref<number | undefined>(undefined);
+const adminWindowMerchantId = ref<number | null>(null);
 const userOrderFilter = ref<number | "all">("all");
+const userAdvancedStatus = ref<number | undefined>(undefined);
+const userOrderDateRange = ref<[string, string] | null>(null);
+const userMinAmount = ref<number | null>(null);
+const userMaxAmount = ref<number | null>(null);
 const adminUserPage = ref(1);
 const adminUserSize = ref(10);
 const adminUserTotal = ref(0);
+const adminUserRole = ref<number | undefined>(undefined);
+const adminUserStatus = ref<number | undefined>(undefined);
 const activeSection = ref("");
 const windowForm = reactive({
   name: "",
@@ -706,6 +1099,20 @@ const totalAmount = computed(() => selectedItems.value.reduce((sum, item) => sum
 const userReadyCount = computed(() => orders.value.filter((o) => o.status === 3).length);
 const filteredUserOrders = computed(() =>
   (userOrderFilter.value === "all" ? orders.value : orders.value.filter((o) => o.status === userOrderFilter.value)).filter((o) => {
+    if (userAdvancedStatus.value !== undefined && o.status !== userAdvancedStatus.value) return false;
+
+    if (userOrderDateRange.value && userOrderDateRange.value.length === 2) {
+      const [start, end] = userOrderDateRange.value;
+      const createTime = new Date(o.createTime).getTime();
+      const startTime = new Date(start).getTime();
+      const endTime = new Date(end).getTime();
+      if (!Number.isNaN(startTime) && createTime < startTime) return false;
+      if (!Number.isNaN(endTime) && createTime > endTime) return false;
+    }
+
+    if (userMinAmount.value !== null && Number(o.totalAmount) < userMinAmount.value) return false;
+    if (userMaxAmount.value !== null && Number(o.totalAmount) > userMaxAmount.value) return false;
+
     const kw = userOrderKeyword.value.trim();
     if (!kw) return true;
     return (
@@ -735,6 +1142,17 @@ const filteredMenuDishes = computed(() => {
 const filteredMerchantOrders = computed(() => {
   const kw = merchantOrderKeyword.value.trim();
   return merchantOrders.value.filter((o) => {
+    if (merchantOrderStatus.value !== undefined && o.status !== merchantOrderStatus.value) return false;
+    if (merchantOrderDateRange.value && merchantOrderDateRange.value.length === 2) {
+      const [start, end] = merchantOrderDateRange.value;
+      const createTime = new Date(o.createTime).getTime();
+      const startTime = new Date(start).getTime();
+      const endTime = new Date(end).getTime();
+      if (!Number.isNaN(startTime) && createTime < startTime) return false;
+      if (!Number.isNaN(endTime) && createTime > endTime) return false;
+    }
+    if (merchantMinAmount.value !== null && Number(o.totalAmount) < merchantMinAmount.value) return false;
+    if (merchantMaxAmount.value !== null && Number(o.totalAmount) > merchantMaxAmount.value) return false;
     if (!kw) return true;
     return String(o.id).includes(kw) || o.orderNo.includes(kw) || (o.pickupCode || "").includes(kw);
   });
@@ -758,6 +1176,8 @@ const filteredMerchantDishes = computed(() => {
 const filteredWindows = computed(() => {
   const kw = windowKeyword.value.trim();
   return windows.value.filter((w) => {
+    if (adminWindowStatus.value !== undefined && w.status !== adminWindowStatus.value) return false;
+    if (adminWindowMerchantId.value !== null && w.merchantId !== adminWindowMerchantId.value) return false;
     if (!kw) return true;
     return w.name.includes(kw) || w.location.includes(kw) || String(w.id).includes(kw) || String(w.merchantId).includes(kw);
   });
@@ -765,6 +1185,8 @@ const filteredWindows = computed(() => {
 const filteredUsers = computed(() => {
   const kw = userKeyword.value.trim();
   return allUsers.value.filter((u) => {
+    if (adminUserRole.value !== undefined && u.role !== adminUserRole.value) return false;
+    if (adminUserStatus.value !== undefined && u.status !== adminUserStatus.value) return false;
     if (!kw) return true;
     return String(u.id).includes(kw) || u.phone.includes(kw) || u.nickname.includes(kw);
   });
@@ -776,12 +1198,34 @@ const filteredAdminMenus = computed(() => {
     return String(m.id).includes(kw) || m.name.includes(kw);
   });
 });
+const sortedAdminDishList = computed(() => {
+  const rows = [...adminDishList.value];
+  if (adminDishSortType.value === "priceAsc") {
+    rows.sort((a, b) => Number(a.price) - Number(b.price));
+  } else if (adminDishSortType.value === "priceDesc") {
+    rows.sort((a, b) => Number(b.price) - Number(a.price));
+  } else if (adminDishSortType.value === "createTimeAsc") {
+    rows.sort((a, b) => new Date(a.createTime || 0).getTime() - new Date(b.createTime || 0).getTime());
+  } else {
+    rows.sort((a, b) => new Date(b.createTime || 0).getTime() - new Date(a.createTime || 0).getTime());
+  }
+  return rows;
+});
 const selectedWindowLabel = computed(() => {
   if (!selectedWindowId.value) return "未选择窗口";
   const target = windows.value.find((w) => w.id === selectedWindowId.value);
   if (!target) return `窗口ID ${selectedWindowId.value}`;
   return `${target.name}（${target.location}）`;
 });
+
+const menuMerchantNameByMenuDishId = (menuDishId: number) => {
+  for (const menu of userTodayMenus.value) {
+    if ((menu.dishes || []).some((d) => d.id === menuDishId)) {
+      return menu.merchantName || `商家ID ${menu.merchantId ?? "-"}`;
+    }
+  }
+  return "-";
+};
 const pickedMenuItems = computed(() =>
   merchantDishes.value
     .filter((d) => menuItemMap[d.id]?.enabled)
@@ -836,14 +1280,24 @@ const roleNavItems = computed(() => {
 const loadAll = async () => {
   loading.value = true;
   try {
-    const [winList, myOrders] = await Promise.all([getWindowsApi(), getMyOrdersApi()]);
+    const [winList, myOrderPage] = await Promise.all([getWindowsApi(), getMyOrdersApi()]);
     windows.value = winList.filter((w) => w.status === 1);
     if (isUser.value) {
       const menus = await getTodayMenusApi();
+      userTodayMenus.value = menus;
       dishes.value = menus.flatMap((m) => m.dishes || []);
-      orders.value = myOrders;
+      orders.value = myOrderPage.records || [];
     } else if (isMerchant.value) {
-      merchantOrders.value = myOrders;
+      const merchantPage = await getMerchantOrdersApi({
+        page: merchantOrderPage.value,
+        size: merchantOrderSize.value,
+        keyword: merchantOrderKeyword.value.trim() || undefined,
+        status: merchantOrderStatus.value,
+        dateFrom: merchantOrderDateRange.value?.[0],
+        dateTo: merchantOrderDateRange.value?.[1]
+      });
+      merchantOrders.value = merchantPage.records || [];
+      merchantOrderTotal.value = merchantPage.total || 0;
       merchantDishes.value = await getDishListApi();
       merchantTodayMenus.value = await getTodayMenusApi();
       lowStockDishes.value = merchantTodayMenus.value.flatMap((m) => m.dishes || []);
@@ -851,13 +1305,57 @@ const loadAll = async () => {
         menuItemMap[d.id] = menuItemMap[d.id] || { enabled: false, salePrice: Number(d.price), stock: 50 };
       });
     } else {
-      const [usersPage, usersForMerchant] = await Promise.all([
-        getUserListApi(adminUserPage.value, adminUserSize.value),
-        getUserListApi(1, 200)
+      const [usersPage, usersForMerchant, windowsPage] = await Promise.all([
+        queryUserListApi({ page: adminUserPage.value, size: adminUserSize.value, nickname: userKeyword.value.trim() || undefined }),
+        getUserListApi(1, 200),
+        getWindowsPageApi({
+          page: adminWindowPage.value,
+          size: adminWindowSize.value,
+          keyword: windowKeyword.value.trim() || undefined,
+          status: adminWindowStatus.value,
+          merchantId: adminWindowMerchantId.value || undefined
+        })
       ]);
-      adminMenus.value = await getTodayMenusApi();
+      adminMenuPageLoading.value = true;
+      try {
+        const menuPage = await getMenuListApi({
+          page: adminMenuPage.value,
+          size: adminMenuSize.value,
+          name: menuKeyword.value.trim() || undefined,
+          merchantId: adminMenuMerchantId.value || undefined,
+          saleDate: adminMenuSaleDate.value || undefined,
+          status: adminMenuStatus.value
+        });
+        adminMenus.value = menuPage.records || [];
+        adminMenuTotal.value = menuPage.total || 0;
+      } finally {
+        adminMenuPageLoading.value = false;
+      }
+      adminDishPageLoading.value = true;
+      try {
+        const dishPage = await getDishPageApi({
+          page: adminDishPage.value,
+          size: adminDishSize.value,
+          merchantId: adminDishMerchantId.value || undefined,
+          name: adminDishQueryId.value ? undefined : adminDishNameKeyword.value.trim() || undefined,
+          category: adminDishCategoryKeyword.value.trim() || undefined,
+          status: adminDishStatus.value,
+          minPrice: adminDishMinPrice.value ?? undefined,
+          maxPrice: adminDishMaxPrice.value ?? undefined
+        });
+        let records = dishPage.records || [];
+        if (adminDishQueryId.value) {
+          records = records.filter((d) => d.id === adminDishQueryId.value);
+        }
+        adminDishList.value = records;
+        adminDishTotal.value = dishPage.total || 0;
+      } finally {
+        adminDishPageLoading.value = false;
+      }
       allUsers.value = usersPage.records;
       adminUserTotal.value = usersPage.total;
+      windows.value = windowsPage.records;
+      adminWindowTotal.value = windowsPage.total;
       merchantUsers.value = usersForMerchant.records.filter((u) => u.role === 1 && u.status === 1);
       if (!windowForm.merchantId && merchantUsers.value.length > 0) {
         windowForm.merchantId = merchantUsers.value[0].id;
@@ -987,6 +1485,153 @@ const onAdminUserSizeChange = async (size: number) => {
   await loadAll();
 };
 
+const onAdminWindowPageChange = async (page: number) => {
+  adminWindowPage.value = page;
+  await loadAll();
+};
+
+const onAdminWindowSizeChange = async (size: number) => {
+  adminWindowSize.value = size;
+  adminWindowPage.value = 1;
+  await loadAll();
+};
+
+const onAdminMenuPageChange = async (page: number) => {
+  adminMenuPage.value = page;
+  await loadAll();
+};
+
+const onAdminMenuSizeChange = async (size: number) => {
+  adminMenuSize.value = size;
+  adminMenuPage.value = 1;
+  await loadAll();
+};
+
+const onAdminDishPageChange = async (page: number) => {
+  adminDishPage.value = page;
+  await loadAll();
+};
+
+const onAdminDishSizeChange = async (size: number) => {
+  adminDishSize.value = size;
+  adminDishPage.value = 1;
+  await loadAll();
+};
+
+const onMerchantOrderPageChange = async (page: number) => {
+  merchantOrderPage.value = page;
+  await loadAll();
+};
+
+const onMerchantOrderSizeChange = async (size: number) => {
+  merchantOrderSize.value = size;
+  merchantOrderPage.value = 1;
+  await loadAll();
+};
+
+const resetUserOrderFilters = () => {
+  userOrderFilter.value = "all";
+  userAdvancedStatus.value = undefined;
+  userOrderDateRange.value = null;
+  userMinAmount.value = null;
+  userMaxAmount.value = null;
+  userOrderKeyword.value = "";
+};
+
+const resetMerchantOrderFilters = () => {
+  merchantOrderKeyword.value = "";
+  merchantOrderStatus.value = undefined;
+  merchantOrderDateRange.value = null;
+  merchantMinAmount.value = null;
+  merchantMaxAmount.value = null;
+  merchantOrderPage.value = 1;
+  loadAll();
+};
+
+const resetAdminWindowFilters = () => {
+  windowKeyword.value = "";
+  adminWindowStatus.value = undefined;
+  adminWindowMerchantId.value = null;
+  adminWindowPage.value = 1;
+  loadAll();
+};
+
+const resetAdminUserFilters = () => {
+  userKeyword.value = "";
+  adminUserRole.value = undefined;
+  adminUserStatus.value = undefined;
+  adminUserPage.value = 1;
+  loadAll();
+};
+
+const resetAdminMenuFilters = () => {
+  menuKeyword.value = "";
+  adminMenuMerchantId.value = null;
+  adminMenuStatus.value = undefined;
+  adminMenuSaleDate.value = "";
+  adminMenuPage.value = 1;
+  loadAll();
+};
+
+const resetAdminDishFilters = () => {
+  adminDishQueryId.value = null;
+  adminDishNameKeyword.value = "";
+  adminDishCategoryKeyword.value = "";
+  adminDishMerchantId.value = null;
+  adminDishStatus.value = undefined;
+  adminDishMinPrice.value = null;
+  adminDishMaxPrice.value = null;
+  adminDishSortType.value = "createTimeDesc";
+  adminDishPage.value = 1;
+  adminDishDetail.value = null;
+  loadAll();
+};
+
+const toggleUserStatus = async (user: UserRecord) => {
+  await updateUserStatusApi(user.id, user.status === 1 ? 0 : 1);
+  ElMessage.success("用户状态已更新");
+  await loadAll();
+};
+
+const removeUser = async (user: UserRecord) => {
+  await deleteUserApi(user.id);
+  ElMessage.success("用户已删除");
+  await loadAll();
+};
+
+const resetUserPassword = (user: UserRecord) => {
+  ElMessageBox.prompt("为该用户设置新密码（6～20 位，与注册规则一致）", "重置密码", {
+    confirmButtonText: "确定",
+    cancelButtonText: "取消",
+    inputType: "password",
+    inputPlaceholder: "新密码",
+    inputValidator: (v) => {
+      if (!v || v.trim().length < 6 || v.trim().length > 20) {
+        return "密码长度需为 6～20 位";
+      }
+      return true;
+    }
+  })
+    .then(async ({ value }) => {
+      await resetUserPasswordApi(user.id, value.trim());
+      ElMessage.success(`已重置 ${user.nickname ?? user.phone} 的密码`);
+      await loadAll();
+    })
+    .catch(() => {});
+};
+
+const toggleWindowStatus = async (row: PickupWindow) => {
+  await updateWindowStatusApi(row.id, row.status === 1 ? 0 : 1);
+  ElMessage.success("窗口状态已更新");
+  await loadAll();
+};
+
+const removeWindow = async (row: PickupWindow) => {
+  await deleteWindowApi(row.id);
+  ElMessage.success("窗口已删除");
+  await loadAll();
+};
+
 const openAdminMenuDetail = async (menuId: number) => {
   adminMenuLoading.value = true;
   try {
@@ -997,18 +1642,154 @@ const openAdminMenuDetail = async (menuId: number) => {
   }
 };
 
-const queryAdminDishDetail = async () => {
-  if (!adminDishQueryId.value) {
-    ElMessage.warning("请输入菜品ID");
-    return;
+const openAdminMenuEdit = (row: TodayMenu) => {
+  adminMenuEditId.value = row.id;
+  adminMenuEditForm.name = row.name || "";
+  adminMenuEditForm.saleDate = row.saleDate || "";
+  adminMenuEditForm.startTime = row.startTime || "";
+  adminMenuEditForm.endTime = row.endTime || "";
+  adminMenuEditVisible.value = true;
+};
+
+const submitAdminMenuEdit = async () => {
+  if (!adminMenuEditId.value) return;
+  adminMenuEditSaving.value = true;
+  try {
+    await adminUpdateMenuApi(adminMenuEditId.value, {
+      name: adminMenuEditForm.name.trim() || undefined,
+      saleDate: adminMenuEditForm.saleDate || undefined,
+      startTime: adminMenuEditForm.startTime || undefined,
+      endTime: adminMenuEditForm.endTime || undefined
+    });
+    ElMessage.success("菜单已更新");
+    adminMenuEditVisible.value = false;
+    await loadAll();
+  } finally {
+    adminMenuEditSaving.value = false;
   }
+};
+
+const toggleAdminMenuStatus = async (row: TodayMenu) => {
+  await adminUpdateMenuStatusApi(row.id, row.status === 1 ? 0 : 1);
+  ElMessage.success("菜单状态已更新");
+  await loadAll();
+};
+
+const deleteAdminMenu = async (row: TodayMenu) => {
+  await ElMessageBox.confirm(`确认删除菜单「${row.name}」？`, "删除菜单", {
+    confirmButtonText: "删除",
+    cancelButtonText: "取消",
+    type: "warning"
+  });
+  await adminDeleteMenuApi(row.id);
+  ElMessage.success("菜单已删除");
+  await loadAll();
+};
+
+const batchUpdateAdminMenuStatus = async (value: 0 | 1) => {
+  if (adminMenuSelectedIds.value.length === 0) return;
+  adminMenuBatchLoading.value = true;
+  try {
+    for (const id of adminMenuSelectedIds.value) {
+      await adminUpdateMenuStatusApi(id, value);
+    }
+    ElMessage.success(value === 1 ? "已批量启用" : "已批量停用");
+    adminMenuSelectedIds.value = [];
+    await loadAll();
+  } finally {
+    adminMenuBatchLoading.value = false;
+  }
+};
+
+const batchDeleteAdminMenus = async () => {
+  if (adminMenuSelectedIds.value.length === 0) return;
+  await ElMessageBox.confirm(`确认删除选中的 ${adminMenuSelectedIds.value.length} 个菜单？`, "批量删除菜单", {
+    confirmButtonText: "删除",
+    cancelButtonText: "取消",
+    type: "warning"
+  });
+  adminMenuBatchLoading.value = true;
+  try {
+    for (const id of adminMenuSelectedIds.value) {
+      await adminDeleteMenuApi(id);
+    }
+    ElMessage.success("已批量删除");
+    adminMenuSelectedIds.value = [];
+    await loadAll();
+  } finally {
+    adminMenuBatchLoading.value = false;
+  }
+};
+
+const onAdminMenuSelectionChange = (rows: TodayMenu[]) => {
+  adminMenuSelectedIds.value = (rows || []).map((r) => r.id);
+};
+
+const openAdminMenuDishEdit = (row: MenuDish) => {
+  adminMenuDishEditForm.menuDishId = row.id;
+  adminMenuDishEditForm.dishId = row.dishId;
+  adminMenuDishEditForm.salePrice = Number(row.salePrice);
+  adminMenuDishEditForm.status = row.status;
+  adminMenuDishEditVisible.value = true;
+};
+
+const submitAdminMenuDishEdit = async () => {
+  adminMenuDishEditSaving.value = true;
+  try {
+    await adminUpdateMenuDishApi(adminMenuDishEditForm.menuDishId, {
+      dishId: adminMenuDishEditForm.dishId,
+      salePrice: Number(adminMenuDishEditForm.salePrice),
+      status: adminMenuDishEditForm.status
+    });
+    ElMessage.success("菜单项已更新");
+    adminMenuDishEditVisible.value = false;
+    // refresh detail view for immediate feedback
+    if (adminMenuDetail.value?.id) {
+      adminMenuDetail.value = await getMenuDetailApi(adminMenuDetail.value.id);
+    }
+  } finally {
+    adminMenuDishEditSaving.value = false;
+  }
+};
+
+const openAdminStockOp = (row: MenuDish) => {
+  adminStockMenuDishId.value = row.id;
+  adminStockOpForm.op = "SET";
+  adminStockOpForm.value = Number(row.stock);
+  adminStockOpForm.reason = "";
+  adminStockOpVisible.value = true;
+};
+
+const submitAdminStockOp = async () => {
+  if (!adminStockMenuDishId.value) return;
+  adminStockOpSaving.value = true;
+  try {
+    await updateStockApi(adminStockMenuDishId.value, adminStockOpForm);
+    ElMessage.success("库存已更新");
+    adminStockOpVisible.value = false;
+    if (adminMenuDetail.value?.id) {
+      adminMenuDetail.value = await getMenuDetailApi(adminMenuDetail.value.id);
+    }
+  } finally {
+    adminStockOpSaving.value = false;
+  }
+};
+
+const openAdminDishDetail = async (dishId: number) => {
   adminDishQueryLoading.value = true;
   try {
-    adminDishDetail.value = await getDishDetailApi(adminDishQueryId.value);
+    adminDishDetail.value = await getDishDetailApi(dishId);
     ElMessage.success("查询成功");
   } finally {
     adminDishQueryLoading.value = false;
   }
+};
+
+const loadAdminDishPage = async (resetPage = false) => {
+  if (resetPage) {
+    adminDishPage.value = 1;
+  }
+  await loadAll();
 };
 
 const createWindow = async () => {
@@ -1140,6 +1921,14 @@ const roleNameByValue = (role: number) => {
 
 const goDisplay = async () => {
   await router.push("/display");
+};
+
+const goMerchantStock = async () => {
+  await router.push("/merchant/stock");
+};
+
+const goAdminStock = async () => {
+  await router.push("/admin/stock");
 };
 
 const goProfile = async () => {
