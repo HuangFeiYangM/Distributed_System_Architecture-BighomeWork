@@ -25,3 +25,8 @@ desktop.ini
 
 # ===== Archives / local packages =====
 *.zip
+
+
+# ===== K3s build outputs =====
+k3s-version/artifacts/backend/*.jar
+k3s-version/images/*.tar
