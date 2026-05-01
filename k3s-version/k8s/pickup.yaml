@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: canteen-pickup-service
+  namespace: canteen-offline
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: canteen-pickup-service
+  template:
+    metadata:
+      labels:
+        app: canteen-pickup-service
+    spec:
+      containers:
+        - name: canteen-pickup-service
+          image: canteen-pickup-service:v1
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8084
+          env:
+            - name: SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR
+              value: host.k3d.internal:8848
+            - name: SPRING_CLOUD_NACOS_CONFIG_SERVER_ADDR
+              value: host.k3d.internal:8848
+            - name: SPRING_DATASOURCE_URL
+              value: jdbc:mysql://host.k3d.internal:3320/canteen_pickup?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
+            - name: SPRING_DATASOURCE_USERNAME
+              value: root
+            - name: SPRING_DATASOURCE_PASSWORD
+              value: root
+            - name: SPRING_REDIS_HOST
+              value: host.k3d.internal
+            - name: SPRING_REDIS_PORT
+              value: "6379"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: canteen-pickup-service
+  namespace: canteen-offline
+spec:
+  selector:
+    app: canteen-pickup-service
+  ports:
+    - port: 8084
+      targetPort: 8084

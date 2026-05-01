@@ -4,8 +4,10 @@ com\canteen\menu\vo\MenuDetailVO$MenuDetailVOBuilder.class
 com\canteen\menu\controller\DishController.class
 com\canteen\menu\mapper\MenuDishMapper.class
 com\canteen\menu\service\DailyMenuService.class
+com\canteen\menu\dto\StockUpdateDTO.class
 com\canteen\menu\entity\Menu.class
 com\canteen\menu\service\DishService.class
+com\canteen\menu\dto\AdminMenuUpdateDTO.class
 com\canteen\menu\dto\DishCreateDTO.class
 com\canteen\menu\dto\MenuPublishDTO$MenuDishItemDTO.class
 com\canteen\menu\mapper\DishMapper.class
@@ -14,6 +16,8 @@ com\canteen\menu\vo\MenuDishDetailVO$MenuDishDetailVOBuilder.class
 com\canteen\menu\vo\MenuDetailVO.class
 com\canteen\menu\config\MybatisMetaObjectHandler.class
 com\canteen\menu\MenuServiceApplication.class
+com\canteen\menu\vo\StockItemVO.class
+com\canteen\menu\dto\AdminMenuDishUpdateDTO.class
 com\canteen\menu\dto\StockOpDTO.class
 com\canteen\menu\vo\MenuDishDetailVO.class
 com\canteen\menu\config\GlobalExceptionHandler.class

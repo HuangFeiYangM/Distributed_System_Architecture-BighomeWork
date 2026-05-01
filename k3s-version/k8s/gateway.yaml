@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: canteen-gateway
+  namespace: canteen-offline
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: canteen-gateway
+  template:
+    metadata:
+      labels:
+        app: canteen-gateway
+    spec:
+      containers:
+        - name: canteen-gateway
+          image: canteen-gateway:v1
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          env:
+            - name: SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR
+              value: host.k3d.internal:8848
+            - name: SPRING_CLOUD_NACOS_CONFIG_SERVER_ADDR
+              value: host.k3d.internal:8848
+            - name: SPRING_REDIS_HOST
+              value: host.k3d.internal
+            - name: SPRING_REDIS_PORT
+              value: "6379"
+            - name: SPRING_DATA_REDIS_HOST
+              value: host.k3d.internal
+            - name: SPRING_DATA_REDIS_PORT
+              value: "6379"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: canteen-gateway
+  namespace: canteen-offline
+spec:
+  type: NodePort
+  selector:
+    app: canteen-gateway
+  ports:
+    - port: 8080
+      targetPort: 8080
+      nodePort: 30080

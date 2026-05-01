@@ -1,6 +1,8 @@
 com\canteen\order\mapper\OrderItemMapper.class
 com\canteen\order\mapper\OrderMapper.class
+com\canteen\order\controller\StatController.class
 com\canteen\order\entity\CanteenOrder.class
+com\canteen\order\dto\OrderBatchStatusDTO.class
 com\canteen\order\client\dto\MenuDishRemoteVO.class
 com\canteen\order\client\dto\EnqueueRequest.class
 com\canteen\order\client\dto\MenuStockOpDTO.class
